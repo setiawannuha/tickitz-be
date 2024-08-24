@@ -14,11 +14,10 @@ type claims struct {
 	jwt.RegisteredClaims
 }
 
-func NewJWT(id, email string, role string) *claims {
+func NewJWT(id, email string) *claims {
 	return &claims{
 		Id:    id,
 		Email: email,
-		Role: role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "TICKITZ",
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
