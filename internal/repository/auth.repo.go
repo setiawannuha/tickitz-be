@@ -1,14 +1,13 @@
 package repository
 
 import (
-	"fmt"
 	"khalifgfrz/coffee-shop-be-go/internal/models"
 
 	"github.com/jmoiron/sqlx"
 )
 
 type AuthRepositoryInterface interface {
-	GetByEmail(email string) (*models.UserLogin, error)
+	GetByEmail(email string) (*models.Auth, error)
 }
 
 type AuthRepository struct {
@@ -19,14 +18,13 @@ func NewAuthRepository(db *sqlx.DB) *AuthRepository {
 	return &AuthRepository{db}
 }
 
-func (r *AuthRepository) GetByEmail(email string) (*models.UserLogin, error) {
-	result := models.UserLogin{}
-	query := `SELECT id , email , password from users WHERE email = $1`
+func (r *AuthRepository) GetByEmail(email string) (*models.Auth, error) {
+	result := models.Auth{}
+	query := `SELECT id, email, password, role from public.users WHERE email = $1`
 	err := r.Get(&result, query, email)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("dari res %s ", &result)
 
 	return &result, nil
 }
