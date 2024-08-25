@@ -4,6 +4,8 @@ import (
 	"khalifgfrz/coffee-shop-be-go/internal/routers"
 	"khalifgfrz/coffee-shop-be-go/pkg"
 	"log"
+
+	_ "github.com/joho/godotenv/autoload"
 )
 
 func main() {
