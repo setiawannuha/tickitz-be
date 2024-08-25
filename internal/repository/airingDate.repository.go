@@ -16,6 +16,11 @@ type RepoAiringDate struct {
 	*sqlx.DB
 }
 
+// InsertAiringDate implements AiringDateRepoInterface.
+func (r *RepoAiringDate) InsertAiringDate(dates *models.AiringDate) ([]models.AiringDate, error) {
+	panic("unimplemented")
+}
+
 func NewAiringDateRepository(db *sqlx.DB) *RepoAiringDate {
 	return &RepoAiringDate{db}
 }

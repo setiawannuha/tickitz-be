@@ -25,7 +25,7 @@ type HandlerMovie struct {
 	DB *gorm.DB
 }
 
-func NewMovie(
+func NewMovieRepository(
 	mr repository.MovieRepoInterface,
 	gmr repository.GenreMovieRepoInterface,
 	ad repository.AiringDateRepoInterface,
