@@ -26,7 +26,7 @@ func (h *HandlerAiringDate) PostAiringDate(ctx *gin.Context) {
 		return
 	}
 
-	results, err := h.InsertAiringDate(&airingDates)
+	results, err := h.CreateAiringDate(&airingDates)
 	if err != nil {
 		response.InternalServerError("Internal Server Error", err.Error())
 		return

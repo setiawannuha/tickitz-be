@@ -33,7 +33,8 @@ func (r *RepoMovies) CreateMovie(data *models.MoviesBody) (*models.Movies, error
             "casts",
             "duration",
             "release_date",
-            "synopsis"
+            "synopsis",
+						"is_deleted"
         ) VALUES (
             :title,
             :image,
@@ -41,8 +42,9 @@ func (r *RepoMovies) CreateMovie(data *models.MoviesBody) (*models.Movies, error
             :casts,
             :duration,
             :release_date,
-            :synopsis
-        ) RETURNING id, title, image, director, casts, duration, release_date, synopsis, created_at, updated_at;
+            :synopsis,
+						FALSE
+        ) RETURNING id, title, image, director, casts, duration, release_date, synopsis, created_at;
     `
 	var result models.Movies
 	rows, err := r.DB.NamedQuery(query, data)
@@ -63,19 +65,30 @@ func (r *RepoMovies) CreateMovie(data *models.MoviesBody) (*models.Movies, error
 
 func (r *RepoMovies) GetAllMovies(query *models.MoviesQuery) (*models.MovieResponse, int, error) {
 	baseQuery := `
-		SELECT 
-			"m".*, 
-			COALESCE(ARRAY_AGG("g"."name") FILTER (WHERE "g"."name" IS NOT NULL), '{}') AS genres
-		FROM public.movies "m"
-		LEFT JOIN public.genre_movies gm ON "m"."id" = "gm"."movie_id"
-		LEFT JOIN public.genres "g" ON "gm"."genre_id" = "g"."id"
-	`
+  	SELECT 
+      "m".id, 
+      "m".title, 
+      "m".image, 
+      COALESCE(STRING_AGG("g"."name", ', '), '') AS genres,
+      "m".director, 
+      "m".casts, 
+      "m".duration, 
+      "m".release_date, 
+      "m".synopsis, 
+      "m".is_deleted, 
+      "m".created_at, 
+      "m".updated_at
+  	FROM public.movies "m"
+  	LEFT JOIN public.genre_movies gm ON "m"."id" = "gm"."movie_id"
+  	LEFT JOIN public.genres "g" ON "gm"."genre_id" = "g"."id"
+    `
 	countQuery := `
-		SELECT COUNT(DISTINCT "m"."id") 
-		FROM public.movies m
-		LEFT JOIN public.genre_movies gm ON "m"."id" = "gm"."movie_id"
-		LEFT JOIN public.genres "g" ON "gm"."genre_id" = "g"."id"
-	`
+      SELECT COUNT(DISTINCT "m"."id") 
+      FROM public.movies m
+      LEFT JOIN public.genre_movies gm ON "m"."id" = "gm"."movie_id"
+      LEFT JOIN public.genres "g" ON "gm"."genre_id" = "g"."id"
+      WHERE "m"."is_deleted" = FALSE
+    `
 	whereClauses := []string{}
 	var values []interface{}
 
@@ -106,7 +119,7 @@ func (r *RepoMovies) GetAllMovies(query *models.MoviesQuery) (*models.MovieRespo
 		values = append(values, limit, offset)
 	}
 
-	data := models.MovieResponse{}
+	var data models.MovieResponse
 	if err := r.Select(&data, baseQuery, values...); err != nil {
 		return nil, 0, err
 	}

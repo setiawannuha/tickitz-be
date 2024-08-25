@@ -19,5 +19,5 @@ type GenreMovie struct {
 	Genre_id   int        `db:"genre_id" json:"genre_id"`
 	Movie_id   string     `db:"movie_id" json:"movie_id"`
 	Created_at *time.Time `db:"created_at" json:"created_at"`
-	Updated_at *time.Time `db:"updated_at" json:"updated_at"`
+	Updated_at *time.Time `db:"updated_at" json:"updated_at,omitempty"`
 }

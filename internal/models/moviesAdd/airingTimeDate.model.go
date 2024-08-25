@@ -17,7 +17,7 @@ CREATE TABLE public.airing_time_date (
 type AiringTimeDate struct {
 	Id             int       `db:"id" json:"id"`
 	Airing_time_id int       `db:"airing_time_id" json:"airing_time_id"`
-	Date_time_id   int       `db:"date_time_id" json:"date_time_id"`
+	Date_id        int       `db:"date_id" json:"date_id"`
 	Created_at     time.Time `db:"created_at" json:"created_at"`
 	Updated_at     time.Time `db:"updated_at" json:"updated_at"`
 }

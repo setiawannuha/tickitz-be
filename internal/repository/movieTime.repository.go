@@ -7,7 +7,7 @@ import (
 )
 
 type MovieTimeRepoInteface interface {
-	CreateMovieTime(data *models.MovieTime) (string, error)
+	CreateMovieTime(data *models.MovieTime) (*models.MovieTime, error)
 	GetTimeByMovieId(id string) (*models.MovieTime, error)
 	UpdateMovieTime(id string, data *models.MovieTime) (string, error)
 	DeleteMovieTime(id int) (string, error)
@@ -21,7 +21,7 @@ func NewMovieTimeRepository(db *sqlx.DB) *MovieTimeRepository {
 	return &MovieTimeRepository{db}
 }
 
-func (r *MovieTimeRepository) CreateMovieTime(data *models.MovieTime) (string, error) {
+func (r *MovieTimeRepository) CreateMovieTime(data *models.MovieTime) (*models.MovieTime, error) {
 	query := `
 		INSERT INTO public.movies_time (
       "movie_id",
@@ -34,18 +34,18 @@ func (r *MovieTimeRepository) CreateMovieTime(data *models.MovieTime) (string, e
 	var results models.MovieTime
 	rows, err := r.DB.NamedQuery(query, data)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer rows.Close()
 
 	if rows.Next() {
 		err := rows.StructScan(&results)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 	}
 
-	return "Data created", nil
+	return &results, nil
 }
 
 func (r *MovieTimeRepository) GetTimeByMovieId(id string) (*models.MovieTime, error) {

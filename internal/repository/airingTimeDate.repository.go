@@ -33,7 +33,7 @@ func (r *RepoAiringTimeDate) GetAiringTimeDate() ([]models.AiringTimeDate, error
 //methods insert airing_time_date
 
 func (r *RepoAiringTimeDate) InsertAiringTimeDate(airingTimeDate *models.AiringTimeDate) (*models.AiringTimeDate, error) {
-	query := `INSERT INTO airing_time_date (airing_time_id, airing_date_id) VALUES (:airing_time_id,:airing_date_id) RETURNING *`
+	query := `INSERT INTO airing_time_date (airing_time_id, date_id) VALUES (:airing_time_id,:date_id) RETURNING *`
 
 	var results models.AiringTimeDate
 	rows, err := r.DB.NamedQuery(query, airingTimeDate)

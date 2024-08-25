@@ -12,29 +12,49 @@ import (
 
 	"github.com/asaskevich/govalidator"
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
+	"github.com/jmoiron/sqlx"
 )
 
 type HandlerMovie struct {
 	repository.MovieRepoInterface
 	repository.GenreMovieRepoInterface
 	repository.AiringDateRepoInterface
+	repository.AiringTimeDateRepoInterface
 	repository.MovieTimeRepoInteface
 	repository.LocationMovieTimeRepoInterface
 	pkg.Cloudinary
-	DB *gorm.DB
+	DB *sqlx.DB
 }
 
 func NewMovieRepository(
 	mr repository.MovieRepoInterface,
 	gmr repository.GenreMovieRepoInterface,
 	ad repository.AiringDateRepoInterface,
+	atd repository.AiringTimeDateRepoInterface,
 	mt repository.MovieTimeRepoInteface,
 	lmt repository.LocationMovieTimeRepoInterface,
 	cld pkg.Cloudinary,
-	db *gorm.DB,
+	db *sqlx.DB,
 ) *HandlerMovie {
-	return &HandlerMovie{mr, gmr, ad, mt, lmt, cld, db}
+	return &HandlerMovie{mr, gmr, ad, atd, mt, lmt, cld, db}
+}
+
+func SplitCommaSeparatedInts(input string) ([]int, error) {
+	var result []int
+	if input == "" {
+		return result, nil
+	}
+
+	parts := strings.Split(input, ",")
+	for _, part := range parts {
+		trimmedPart := strings.TrimSpace(part)
+		value, err := strconv.Atoi(trimmedPart)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, value)
+	}
+	return result, nil
 }
 
 func (h *HandlerMovie) InsertMovies(ctx *gin.Context) {
@@ -42,7 +62,16 @@ func (h *HandlerMovie) InsertMovies(ctx *gin.Context) {
 
 	var movies models.MoviesBody
 
-	tx := h.DB.Begin()
+	if h.DB == nil {
+		response.InternalServerError("Database connection is not initialized", nil)
+		return
+	}
+
+	tx, err := h.DB.Beginx()
+	if err != nil {
+		response.InternalServerError("Failed to start transaction", err.Error())
+		return
+	}
 	defer func() {
 		if r := recover(); r != nil {
 			tx.Rollback()
@@ -55,7 +84,28 @@ func (h *HandlerMovie) InsertMovies(ctx *gin.Context) {
 		return
 	}
 
-	_, err := govalidator.ValidateStruct(&movies)
+	genreIDs, err := SplitCommaSeparatedInts(movies.Genres)
+	if err != nil {
+		tx.Rollback()
+		response.BadRequest("Invalid genre ID format", err.Error())
+		return
+	}
+
+	airingTimeIDs, err := SplitCommaSeparatedInts(movies.AiringTime)
+	if err != nil {
+		tx.Rollback()
+		response.BadRequest("Invalid airing time format", err.Error())
+		return
+	}
+
+	locationIDs, err := SplitCommaSeparatedInts(movies.Locations)
+	if err != nil {
+		tx.Rollback()
+		response.BadRequest("Invalid location format", err.Error())
+		return
+	}
+
+	_, err = govalidator.ValidateStruct(&movies)
 	if err != nil {
 		tx.Rollback()
 		response.BadRequest("Create movie failed", err.Error())
@@ -94,6 +144,7 @@ func (h *HandlerMovie) InsertMovies(ctx *gin.Context) {
 	imageURL := uploadResult.SecureURL
 	movies.Image = imageURL
 
+	// Step 1: Create the movie and get the ID
 	results, err := h.CreateMovie(&movies)
 	if err != nil {
 		tx.Rollback()
@@ -107,10 +158,11 @@ func (h *HandlerMovie) InsertMovies(ctx *gin.Context) {
 		return
 	}
 
-	for _, genre := range movies.Genres {
+	// Step 2: Link Movie ID with Genre IDs based on genres []int
+	for _, genreId := range genreIDs {
 		genreMovie := moviesAdd.GenreMovie{
 			Movie_id: results.Id,
-			Genre_id: genre.ID,
+			Genre_id: genreId,
 		}
 		if _, err := h.InsertGenreMovie(&genreMovie); err != nil {
 			tx.Rollback()
@@ -119,8 +171,28 @@ func (h *HandlerMovie) InsertMovies(ctx *gin.Context) {
 		}
 	}
 
-	// // 5. Insert related data into the AiringDate table
-	for _, airingDate := range movies.AiringDate {
+	// Step 3: Create AiringDate based on airingDate []string (start and end)
+	for _, dateRange := range movies.AiringDate {
+		dates := strings.Split(dateRange, ",")
+		var airingDate moviesAdd.AiringDate
+
+		if len(dates) == 2 {
+			airingDate = moviesAdd.AiringDate{
+				Start_date: strings.TrimSpace(dates[0]),
+				End_date:   strings.TrimSpace(dates[1]),
+			}
+		} else if len(dates) == 1 {
+			airingDate = moviesAdd.AiringDate{
+				Start_date: strings.TrimSpace(dates[0]),
+				End_date:   strings.TrimSpace(dates[0]),
+			}
+		} else {
+			tx.Rollback()
+			response.BadRequest("Invalid date range provided", "Expected one or two dates in the format [yyyy-mm-dd] or [yyyy-mm-dd, yyyy-mm-dd]")
+			return
+		}
+
+		// Check if airingDate already exists and insert or retrieve its ID
 		existingAiringDate, err := h.GetAiringDateByInput(&airingDate)
 		if err != nil {
 			tx.Rollback()
@@ -129,53 +201,72 @@ func (h *HandlerMovie) InsertMovies(ctx *gin.Context) {
 		}
 
 		if existingAiringDate != nil {
-			// Use existing ID
 			airingDate.Id = existingAiringDate.Id
 		} else {
-			// Insert new airing date
-			airingDate := moviesAdd.AiringDate{
-				Start_date: airingDate.Start_date,
-				End_date:   airingDate.End_date,
-			}
-			_, err := h.InsertAiringDate(&airingDate)
+			insertedAiringDates, err := h.CreateAiringDate(&airingDate)
 			if err != nil {
 				tx.Rollback()
 				response.InternalServerError("Failed to insert airing date", err.Error())
 				return
 			}
+			if len(insertedAiringDates) > 0 {
+				airingDate.Id = insertedAiringDates[0].Id
+			} else {
+				tx.Rollback()
+				response.InternalServerError("No airing date was inserted", "Expected a valid ID")
+				return
+			}
 		}
-	}
 
-	for _, movieTime := range movies.MovieTime {
-		movieTimeRecord := moviesAdd.MovieTime{
-			Movie_id:            results.Id,
-			Airing_time_date_id: movieTime.Airing_time_date_id,
+		// Step 4: Link AiringDate ID with AiringTime IDs based on airingTime []int
+		for _, airingTimeId := range airingTimeIDs {
+			newAiringTimeDate := moviesAdd.AiringTimeDate{
+				Airing_time_id: airingTimeId,
+				Date_id:        airingDate.Id,
+			}
+			insertedAiringTimeDateId, err := h.InsertAiringTimeDate(&newAiringTimeDate)
+			if err != nil {
+				tx.Rollback()
+				response.InternalServerError("Failed to insert airing time date", err.Error())
+				return
+			}
+
+			// Step 5: Link Movie ID with AiringTimeDate ID and get MovieTime ID
+			movieTime := moviesAdd.MovieTime{
+				Movie_id:            results.Id,
+				Airing_time_date_id: insertedAiringTimeDateId.Id,
+			}
+			insertedMovieTime, err := h.CreateMovieTime(&movieTime)
+			if err != nil {
+				tx.Rollback()
+				response.InternalServerError("Failed to insert movie time", err.Error())
+				return
+			}
+
+			// Step 6: Link Location IDs with Movie ID based on location []int (id)
+			for _, locationId := range locationIDs {
+				movieLocation := moviesAdd.LocationMovieTime{
+					Movie_time_id: insertedMovieTime.ID,
+					Location_id:   locationId,
+				}
+				if _, err := h.CreateLocationMovie(&movieLocation); err != nil {
+					tx.Rollback()
+					response.InternalServerError("Failed to insert movie location", err.Error())
+					return
+				}
+			}
 		}
-		if _, err := h.CreateMovieTime(&movieTimeRecord); err != nil {
+
+		// Commit transaction only if all operations are successful
+		if err := tx.Commit(); err != nil {
 			tx.Rollback()
-			response.InternalServerError("Failed to insert movie time", err.Error())
+			response.InternalServerError("Internal Server Error", "Failed to commit transaction")
 			return
 		}
-	}
 
-	for _, location := range movies.LocationMovieTime {
-		locationMovieTime := moviesAdd.LocationMovieTime{
-			Location_id: location.Location_id,
-		}
-		if _, err := h.CreateLocationMovie(&locationMovieTime); err != nil {
-			tx.Rollback()
-			response.InternalServerError("Failed to insert location movie time", err.Error())
-			return
-		}
+		// Return successful response
+		response.Created("Data created", results)
 	}
-
-	if err := tx.Commit().Error; err != nil {
-		tx.Rollback()
-		response.InternalServerError("Internal Server Error", "Failed to commit transaction")
-		return
-	}
-
-	response.Created("Data created", results)
 }
 
 func (h *HandlerMovie) GetMovies(ctx *gin.Context) {

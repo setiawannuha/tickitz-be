@@ -2,18 +2,20 @@ package models
 
 var TableUser = `
 CREATE TABLE public.users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    first_name VARCHAR(20),
-    last_name VARCHAR(20),
-    email VARCHAR(50),
-    password VARCHAR(255),
-    role VARCHAR,
-    image TEXT,
-    phone_number VARCHAR(15),
-    point VARCHAR(50),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-	constraint user_pk primary key(id)
+	id uuid NOT NULL DEFAULT gen_random_uuid(),
+	first_name varchar(20) NULL,
+	last_name varchar(20) NULL,
+	email varchar(50) NULL,
+	"password" varchar(255) NULL,
+	"role" varchar NULL,
+	image text NULL,
+	phone_number varchar(15) NULL,
+	point varchar(50) NULL,
+	created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+	is_deleted bool NULL,
+	CONSTRAINT unique_email UNIQUE (email),
+	CONSTRAINT users_pkey PRIMARY KEY (id)
 );`
 
 type User struct {
@@ -23,7 +25,7 @@ type User struct {
 	Email        string `db:"email" json:"email" form:"email" valid:"email"`
 	Password     string `db:"password" json:"password" form:"password" valid:"stringlength(5|256)~Password minimal 5 karakter"`
 	Role         string `db:"role" json:"role" form:"role" valid:"-"`
-	Image        string `db:"image" json:"image" form:"image" valid:"-"`
+	Image        string `db:"image" json:"image" valid:"-"`
 	Phone_number string `db:"phone_number" json:"phone_number" form:"phone_number" valid:"-"`
 	Point        string `db:"point" json:"point" form:"point" valid:"-"`
 }
