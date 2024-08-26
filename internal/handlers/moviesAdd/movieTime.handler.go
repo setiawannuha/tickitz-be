@@ -1,35 +1,61 @@
 package handlers
 
 import (
+	"fmt"
 	models "khalifgfrz/coffee-shop-be-go/internal/models/moviesAdd"
 	"khalifgfrz/coffee-shop-be-go/internal/repository"
 	"khalifgfrz/coffee-shop-be-go/pkg"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jmoiron/sqlx"
 )
 
 type HandlerMovieTime struct {
 	repository.MovieTimeRepoInteface
+	DB *sqlx.DB
 }
 
-func NewMovieTime(r repository.MovieTimeRepoInteface) *HandlerMovieTime {
-	return &HandlerMovieTime{r}
+func NewMovieTime(r repository.MovieTimeRepoInteface, db *sqlx.DB) *HandlerMovieTime {
+	return &HandlerMovieTime{r, db}
 }
 
 func (h *HandlerMovieTime) PostMovieTimes(ctx *gin.Context) {
 	response := pkg.NewResponse(ctx)
 
+	// Mulai transaksi
+	tx, err := h.DB.Beginx()
+	if err != nil {
+		response.InternalServerError("Failed to start transaction", err.Error())
+		return
+	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+			response.InternalServerError("Transaction rolled back due to panic", fmt.Sprintf("%v", r))
+		}
+	}()
+
 	movieTimes := models.MovieTime{}
 
 	if err := ctx.ShouldBind(&movieTimes); err != nil {
+		tx.Rollback()
 		response.BadRequest("Create movie time failed, invalid input", err.Error())
 		return
 	}
 
-	results, err := h.CreateMovieTime(&movieTimes)
+	results, err := h.CreateMovieTime(tx, &movieTimes)
 	if err != nil {
+		tx.Rollback()
 		response.InternalServerError("Internal Server Error", err.Error())
+		return
+	}
+
+	// Commit transaksi jika semua operasi berhasil
+	if err := tx.Commit(); err != nil {
+		tx.Rollback()
+		response.InternalServerError("Failed to commit transaction", err.Error())
 		return
 	}
 

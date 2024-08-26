@@ -1,34 +1,60 @@
 package handlers
 
 import (
+	"fmt"
 	models "khalifgfrz/coffee-shop-be-go/internal/models/moviesAdd"
 	"khalifgfrz/coffee-shop-be-go/internal/repository"
 	"khalifgfrz/coffee-shop-be-go/pkg"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jmoiron/sqlx"
 )
 
 type HandlerAiringTimeDate struct {
 	repository.AiringTimeDateRepoInterface
+	DB *sqlx.DB
 }
 
-func NewAiringTimeDate(r repository.AiringTimeDateRepoInterface) *HandlerAiringTimeDate {
-	return &HandlerAiringTimeDate{r}
+func NewAiringTimeDate(r repository.AiringTimeDateRepoInterface, db *sqlx.DB) *HandlerAiringTimeDate {
+	return &HandlerAiringTimeDate{r, db}
 }
 
 func (h *HandlerAiringTimeDate) PostAiringTimeDate(ctx *gin.Context) {
 	response := pkg.NewResponse(ctx)
 
+	// Mulai transaksi
+	tx, err := h.DB.Beginx()
+	if err != nil {
+		response.InternalServerError("Failed to start transaction", err.Error())
+		return
+	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+			response.InternalServerError("Transaction rolled back due to panic", fmt.Sprintf("%v", r))
+		}
+	}()
+
 	airingTimeDates := models.AiringTimeDate{}
 
 	if err := ctx.ShouldBind(&airingTimeDates); err != nil {
+		tx.Rollback()
 		response.BadRequest("Insert airing date failed", err.Error())
 		return
 	}
 
-	results, err := h.InsertAiringTimeDate(&airingTimeDates)
+	results, err := h.InsertAiringTimeDate(tx, &airingTimeDates)
 	if err != nil {
+		tx.Rollback()
 		response.InternalServerError("Internal Server Error", err.Error())
+		return
+	}
+
+	// Commit transaksi jika semua operasi berhasil
+	if err := tx.Commit(); err != nil {
+		tx.Rollback()
+		response.InternalServerError("Failed to commit transaction", err.Error())
 		return
 	}
 

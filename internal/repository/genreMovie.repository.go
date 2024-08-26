@@ -1,14 +1,15 @@
 package repository
 
 import (
+	"fmt"
 	models "khalifgfrz/coffee-shop-be-go/internal/models/moviesAdd"
 
 	"github.com/jmoiron/sqlx"
 )
 
 type GenreMovieRepoInterface interface {
-	InsertGenreMovie(data *models.GenreMovie) (*models.GenreMovie, error)
-	UpdateGenreMovie(id int, data *models.GenreMovie) (*models.GenreMovie, error)
+	InsertGenreMovie(tx *sqlx.Tx, data *models.GenreMovie) (*models.GenreMovie, error)
+	UpdateGenreMovie(tx *sqlx.Tx, id string, genreIDs []int) error
 	DeleteGenreMovie(id string) (string, error)
 }
 
@@ -20,18 +21,22 @@ func NewGenreMovieRepository(db *sqlx.DB) *RepoGenreMovie {
 	return &RepoGenreMovie{db}
 }
 
-func (r *RepoGenreMovie) InsertGenreMovie(data *models.GenreMovie) (*models.GenreMovie, error) {
+func (r *RepoGenreMovie) InsertGenreMovie(tx *sqlx.Tx, data *models.GenreMovie) (*models.GenreMovie, error) {
+	if data.Movie_id == "" || data.Genre_id == 0 {
+		return nil, fmt.Errorf("genre_id and movie_id cannot be empty or zero")
+	}
+
 	query := `
     INSERT INTO public.genre_movies (
-      "genre_id",
-      "movie_id"
+      genre_id,
+      movie_id
     ) VALUES (
       :genre_id,
       :movie_id
     ) RETURNING id, genre_id, movie_id, created_at, updated_at;
   `
 	var results models.GenreMovie
-	rows, err := r.DB.NamedQuery(query, data)
+	rows, err := tx.NamedQuery(query, data)
 	if err != nil {
 		return nil, err
 	}
@@ -42,37 +47,38 @@ func (r *RepoGenreMovie) InsertGenreMovie(data *models.GenreMovie) (*models.Genr
 		if err != nil {
 			return nil, err
 		}
+	} else {
+		return nil, fmt.Errorf("no rows returned after insert")
 	}
 
 	return &results, nil
 }
 
-func (r *RepoGenreMovie) UpdateGenreMovie(id int, data *models.GenreMovie) (*models.GenreMovie, error) {
-	query := `
-    UPDATE public.genre_movies
-    SET "genre_id" = :genre_id,
-        "movie_id" = :movie_id
-    WHERE id = :id
-    RETURNING *;
-  `
-
-	data.ID = id
-
-	var results models.GenreMovie
-	rows, err := r.DB.NamedQuery(query, data)
-	if err != nil {
-		return nil, err
+func (r *RepoGenreMovie) UpdateGenreMovie(tx *sqlx.Tx, id string, genreIDs []int) error {
+	if id == "" {
+		return fmt.Errorf("movie_id cannot be empty")
 	}
-	defer rows.Close()
 
-	if rows.Next() {
-		err := rows.StructScan(&results)
-		if err != nil {
-			return nil, err
+	if len(genreIDs) < 1 {
+		return fmt.Errorf("genre_ids cannot be empty or null")
+	}
+
+	// Delete existing genres
+	queryDelete := `DELETE FROM public.genre_movies WHERE movie_id = $1`
+	if _, err := tx.Exec(queryDelete, id); err != nil {
+		return err
+	}
+
+	// Insert new genres
+	queryInsert := `INSERT INTO public.genre_movies (movie_id, genre_id) VALUES ($1, $2)`
+
+	for _, genreID := range genreIDs {
+		if _, err := tx.Exec(queryInsert, id, genreID); err != nil {
+			return err
 		}
 	}
 
-	return &results, nil
+	return nil
 }
 
 func (r *RepoGenreMovie) DeleteGenreMovie(id string) (string, error) {
