@@ -16,4 +16,7 @@ func orderRouter(g *gin.Engine, d *sqlx.DB) {
 	handler := handlers.NewOrderHandler(orderRepo, orderDetailsRepo)
 
 	router.POST("/", handler.CreateOrder)
+	router.GET("/history", handler.FetchHistory)
+	router.GET("/", handler.FetchAll)
+	router.GET("/:id", handler.FetchDetail)
 }

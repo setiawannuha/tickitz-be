@@ -27,6 +27,7 @@ type GetOrder struct {
 	Movie_time_id     *string    `db:"movie_time_id" form:"movie_time_id" json:"movie_time_id"`
 	Seat_count        *string    `db:"seat_count" form:"seat_count" json:"seat_count"`
 	Ticket_status     *string    `db:"ticket_status" form:"ticket_status" json:"ticket_status"`
+	Orders            []GetOrderDetails `json:"orders"`
 	Created_at        *time.Time `db:"created_at" form:"created_at" json:"created_at"`
 	Updated_at        *time.Time `db:"updated_at" form:"updated_at" json:"updated_at"`
 }

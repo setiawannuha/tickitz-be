@@ -40,3 +40,80 @@ func (h *OrderHandler) CreateOrder(ctx *gin.Context) {
 
 	response.Created("Create order success", result)
 }
+
+func ( h *OrderHandler ) FetchAll (ctx *gin.Context) {
+	response := pkg.NewResponse(ctx)
+	orders, err := h.GetAllData()
+	if err != nil {
+		response.InternalServerError("Get data failed","error")
+		return
+	}
+	for i := range *orders {
+		order := &(*orders)[i]
+
+		orderDetails, err := h.GetDetailOrder(order.Id)
+		if err != nil {
+			response.InternalServerError("Get data failed","error")
+			return
+		}
+		order.Orders = *orderDetails
+	}
+	response.Success("Get data success", orders)
+}
+
+
+func ( h *OrderHandler ) FetchDetail (ctx *gin.Context) {
+	response := pkg.NewResponse(ctx)
+	id := ctx.Param("id")
+
+	order, err := h.GetDetailData(id)
+
+	if err != nil {
+		response.InternalServerError("Get data failed","error")
+		return
+	}
+
+	orderID := order.Id
+
+	orderDetails, err := h.GetDetailOrder(orderID)
+
+	if err != nil {
+		response.InternalServerError("Get data failed","error")
+		return
+	}
+
+	order.Orders = *orderDetails
+
+	response.Success("Get data success", order)
+}
+
+func ( h *OrderHandler ) FetchHistory (ctx *gin.Context){
+	response := pkg.NewResponse(ctx)
+	userID, exists := ctx.Get("user_id")
+
+	if !exists {
+		response.InternalServerError("User id not found",nil)
+		return
+	}
+
+	id := userID.(string)
+
+	history, err := h.GetHistoryOrder(id)
+
+	if err != nil {
+		response.InternalServerError("Get data failed","error")
+		return
+	}
+	
+	orderID := history.Id
+
+	orderDetails, err := h.GetDetailOrder(orderID)
+
+	if err != nil {
+		response.InternalServerError("Get data failed","error")
+		return
+	}
+
+	history.Orders = *orderDetails
+	response.Success("Get data success", history)
+}

@@ -7,7 +7,7 @@ CREATE TABLE order_details (
     seat_id INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (order_id) REFERENCES orders(id),
+    FOREIGN KEY (order_id) REFERENCES ord   ers(id),
     FOREIGN KEY (seat_id) REFERENCES seats(id)
 );
 `
@@ -15,4 +15,9 @@ CREATE TABLE order_details (
 type OrderDetails struct {
 	Order_id string `db:"order_id" form:"order_id" json:"order_id"`
 	Seat_id  int    `db:"seat_id" form:"seat_id" json:"seat_id"`
+}
+
+type GetOrderDetails struct {
+	Order_id *string `db:"order_id" form:"order_id" json:"order_id"`
+	Seat_id  *int    `db:"seat_id" form:"seat_id" json:"seat_id"`
 }
