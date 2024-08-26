@@ -84,21 +84,21 @@ func (h *HandlerMovie) InsertMovies(ctx *gin.Context) {
 		return
 	}
 
-	genreIDs, err := SplitCommaSeparatedInts(movies.Genres)
+	genres, err := SplitCommaSeparatedInts(movies.Genres)
 	if err != nil {
 		tx.Rollback()
 		response.BadRequest("Invalid genre ID format", err.Error())
 		return
 	}
 
-	airingTimeIDs, err := SplitCommaSeparatedInts(movies.AiringTime)
+	airingTimes, err := SplitCommaSeparatedInts(movies.AiringTime)
 	if err != nil {
 		tx.Rollback()
 		response.BadRequest("Invalid airing time format", err.Error())
 		return
 	}
 
-	locationIDs, err := SplitCommaSeparatedInts(movies.Locations)
+	locations, err := SplitCommaSeparatedInts(movies.Locations)
 	if err != nil {
 		tx.Rollback()
 		response.BadRequest("Invalid location format", err.Error())
@@ -159,7 +159,7 @@ func (h *HandlerMovie) InsertMovies(ctx *gin.Context) {
 	}
 
 	// Step 2: Link Movie ID with Genre IDs based on genres []int
-	for _, genreId := range genreIDs {
+	for _, genreId := range genres {
 		genreMovie := moviesAdd.GenreMovie{
 			Movie_id: results.Id,
 			Genre_id: genreId,
@@ -219,7 +219,7 @@ func (h *HandlerMovie) InsertMovies(ctx *gin.Context) {
 		}
 
 		// Step 4: Link AiringDate ID with AiringTime IDs based on airingTime []int
-		for _, airingTimeId := range airingTimeIDs {
+		for _, airingTimeId := range airingTimes {
 			newAiringTimeDate := moviesAdd.AiringTimeDate{
 				Airing_time_id: airingTimeId,
 				Date_id:        airingDate.Id,
@@ -244,7 +244,7 @@ func (h *HandlerMovie) InsertMovies(ctx *gin.Context) {
 			}
 
 			// Step 6: Link Location IDs with Movie ID based on location []int (id)
-			for _, locationId := range locationIDs {
+			for _, locationId := range locations {
 				movieLocation := moviesAdd.LocationMovieTime{
 					Movie_time_id: insertedMovieTime.ID,
 					Location_id:   locationId,

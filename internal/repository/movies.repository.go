@@ -135,13 +135,21 @@ func (r *RepoMovies) GetAllMovies(query *models.MoviesQuery) (*models.MovieRespo
 func (r *RepoMovies) GetDetailMovie(id string) (*models.Movies, error) {
 	query := `
     SELECT 
-      "m".*, 
-      COALESCE(ARRAY_AGG("g"."name") FILTER (WHERE "g"."name" IS NOT NULL), '{}') AS genres
-    FROM public.movies "m"
-    LEFT JOIN public.genre_movies gm ON "m"."id" = "gm"."movie_id"
-    LEFT JOIN public.genres "g" ON "gm"."genre_id" = "g"."id"
-    WHERE "m"."id" = $1
-    GROUP BY "m"."id"
+      "m".id, 
+      "m".title, 
+      "m".image, 
+      COALESCE(STRING_AGG("g"."name", ', '), '') AS genres,
+      "m".director, 
+      "m".casts, 
+      "m".duration, 
+      "m".release_date, 
+      "m".synopsis, 
+      "m".is_deleted, 
+      "m".created_at, 
+      "m".updated_at
+  	FROM public.movies "m"
+  	LEFT JOIN public.genre_movies gm ON "m"."id" = "gm"."movie_id"
+  	LEFT JOIN public.genres "g" ON "gm"."genre_id" = "g"."id"
   `
 
 	var result models.Movies
