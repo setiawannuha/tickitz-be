@@ -8,6 +8,7 @@ import (
 
 type OrderDetailsRepositoryInterface interface {
 	CreateOrderDetails(order_id string, orders []models.OrderDetails)(string, error)
+	GetDetailOrder(order_id string)(*[]models.GetOrderDetails, error)
 }
 
 type OrderDetailsRepository struct {
@@ -33,7 +34,17 @@ func (r *OrderDetailsRepository) CreateOrderDetails(order_id string, orders []mo
 			return "", err
 		}
 	}
-
-	
     return "Order created", nil
 }
+
+func (r *OrderDetailsRepository) GetDetailOrder(order_id string)(*[]models.GetOrderDetails, error){
+	query := `select order_id, seat_id from order_details where order_id=$1`
+	data := []models.GetOrderDetails{}
+
+	err := r.Select(&data, query, order_id)
+	if err != nil {
+		return nil, err
+	}
+	return &data, nil
+}
+

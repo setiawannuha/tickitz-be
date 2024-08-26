@@ -16,3 +16,8 @@ type OrderDetails struct {
 	Order_id string `db:"order_id" form:"order_id" json:"order_id"`
 	Seat_id  int    `db:"seat_id" form:"seat_id" json:"seat_id"`
 }
+
+type GetOrderDetails struct {
+	Order_id *string `db:"order_id" form:"order_id" json:"order_id"`
+	Seat_id  *int    `db:"seat_id" form:"seat_id" json:"seat_id"`
+}
