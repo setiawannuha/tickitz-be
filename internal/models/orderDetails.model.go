@@ -7,7 +7,7 @@ CREATE TABLE order_details (
     seat_id INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (order_id) REFERENCES orders(id),
+    FOREIGN KEY (order_id) REFERENCES ord   ers(id),
     FOREIGN KEY (seat_id) REFERENCES seats(id)
 );
 `
