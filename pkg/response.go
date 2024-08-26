@@ -13,8 +13,17 @@ type Responder struct {
 type Response struct {
 	Status  int         `json:"status"`
 	Message string      `json:"message"`
+	Meta    *Meta       `json:"meta,omitempty"`
 	Data    interface{} `json:"data,omitempty"`
 	Error   interface{} `json:"error,omitempty"`
+}
+
+type Meta struct {
+	Total     int `json:"totalData,omitempty"`
+	TotalPage int `json:"totalPage,omitempty"`
+	Page      int `json:"page,omitempty"`
+	NextPage  int `json:"nextPage,omitempty"`
+	PrevPage  int `json:"prevPage,omitempty"`
 }
 
 func NewResponse(ctx *gin.Context) *Responder {
@@ -33,6 +42,15 @@ func (r *Responder) Created(message string, data interface{}) {
 	r.C.JSON(http.StatusCreated, Response{
 		Status:  http.StatusCreated,
 		Message: message,
+		Data:    data,
+	})
+}
+
+func (r *Responder) GetAllSuccess(message string, data interface{}, meta *Meta) {
+	r.C.JSON(http.StatusOK, Response{
+		Status:  http.StatusOK,
+		Message: message,
+		Meta:    meta,
 		Data:    data,
 	})
 }
