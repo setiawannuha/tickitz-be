@@ -7,9 +7,10 @@ import (
 )
 
 type LocationMovieTimeRepoInterface interface {
-	CreateLocationMovie(data *models.LocationMovieTime) (string, error)
+	CreateLocationMovie(tx *sqlx.Tx, data *models.LocationMovieTime) (string, error)
 	GetMovieLocTimeById(id string) (*models.LocationMovieTime, error)
 	DeleteLocationMovie(id string) (string, error)
+	UpdateMovieLocations(id string, locationIDs []int) error
 }
 
 type RepoLocationMovie struct {
@@ -20,7 +21,7 @@ func NewLocationMovieRepository(db *sqlx.DB) *RepoLocationMovie {
 	return &RepoLocationMovie{db}
 }
 
-func (r *RepoLocationMovie) CreateLocationMovie(data *models.LocationMovieTime) (string, error) {
+func (r *RepoLocationMovie) CreateLocationMovie(tx *sqlx.Tx, data *models.LocationMovieTime) (string, error) {
 	query := `
     INSERT INTO public.location_movie_time (
       "location_id",
@@ -30,7 +31,7 @@ func (r *RepoLocationMovie) CreateLocationMovie(data *models.LocationMovieTime) 
 			:movie_time_id)`
 
 	var results models.LocationMovieTime
-	rows, err := r.DB.NamedQuery(query, data)
+	rows, err := tx.NamedQuery(query, data)
 	if err != nil {
 		return "", err
 	}
@@ -77,4 +78,20 @@ func (r *RepoLocationMovie) DeleteLocationMovie(id string) (string, error) {
 	}
 
 	return "Data deleted", nil
+}
+
+func (r *RepoLocationMovie) UpdateMovieLocations(id string, locationIDs []int) error {
+	queryDelete := `DELETE FROM public.location_movie_time WHERE movie_time_id IN (SELECT id FROM public.movies_time WHERE movie_id = $1)`
+	if _, err := r.DB.Exec(queryDelete, id); err != nil {
+		return err
+	}
+
+	for _, locationID := range locationIDs {
+		queryInsert := `INSERT INTO public.location_movie_time (location_id, movie_time_id) VALUES ($1, (SELECT id FROM public.movies_time WHERE movie_id = $2))`
+		if _, err := r.DB.Exec(queryInsert, locationID, id); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

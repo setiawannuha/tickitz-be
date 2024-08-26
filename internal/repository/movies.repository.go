@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"database/sql"
 	"fmt"
 	"khalifgfrz/coffee-shop-be-go/internal/models"
 	"strings"
@@ -9,10 +10,11 @@ import (
 )
 
 type MovieRepoInterface interface {
-	CreateMovie(data *models.MoviesBody) (*models.Movies, error)
+	CreateMovie(tx *sqlx.Tx, data *models.MoviesBody) (*models.Movies, error)
 	GetAllMovies(query *models.MoviesQuery) (*models.MovieResponse, int, error)
-	GetDetailMovie(id string) (*models.Movies, error)
-	UpdateMovie(id string, data *models.Movies) (string, error)
+	GetDetailMovie(id string) (*models.MovieDetails, error)
+	UpdateMovieDetails(tx *sqlx.Tx, id string, data *models.MoviesBody) (*models.Movies, error)
+	UpdateBannerMovie(id string, data *models.MoviesBanner) (string, error)
 	DeleteMovie(id string) (string, error)
 }
 
@@ -24,7 +26,7 @@ func NewMovieRepository(db *sqlx.DB) *RepoMovies {
 	return &RepoMovies{db}
 }
 
-func (r *RepoMovies) CreateMovie(data *models.MoviesBody) (*models.Movies, error) {
+func (r *RepoMovies) CreateMovie(tx *sqlx.Tx, data *models.MoviesBody) (*models.Movies, error) {
 	query := `
         INSERT INTO public.movies (
             "title",
@@ -34,7 +36,7 @@ func (r *RepoMovies) CreateMovie(data *models.MoviesBody) (*models.Movies, error
             "duration",
             "release_date",
             "synopsis",
-						"is_deleted"
+            "is_deleted"
         ) VALUES (
             :title,
             :image,
@@ -43,11 +45,14 @@ func (r *RepoMovies) CreateMovie(data *models.MoviesBody) (*models.Movies, error
             :duration,
             :release_date,
             :synopsis,
-						FALSE
+            FALSE
         ) RETURNING id, title, image, director, casts, duration, release_date, synopsis, created_at;
     `
+
 	var result models.Movies
-	rows, err := r.DB.NamedQuery(query, data)
+
+	// Use tx.NamedQuery to execute the query within the transaction
+	rows, err := tx.NamedQuery(query, data)
 	if err != nil {
 		return nil, err
 	}
@@ -69,6 +74,7 @@ func (r *RepoMovies) GetAllMovies(query *models.MoviesQuery) (*models.MovieRespo
       "m".id, 
       "m".title, 
       "m".image, 
+			"m".banner,
       COALESCE(STRING_AGG("g"."name", ', '), '') AS genres,
       "m".director, 
       "m".casts, 
@@ -132,48 +138,176 @@ func (r *RepoMovies) GetAllMovies(query *models.MoviesQuery) (*models.MovieRespo
 	return &data, total, nil
 }
 
-func (r *RepoMovies) GetDetailMovie(id string) (*models.Movies, error) {
+func (r *RepoMovies) GetDetailMovie(id string) (*models.MovieDetails, error) {
 	query := `
     SELECT 
-      "m".id, 
-      "m".title, 
-      "m".image, 
-      COALESCE(STRING_AGG("g"."name", ', '), '') AS genres,
-      "m".director, 
-      "m".casts, 
-      "m".duration, 
-      "m".release_date, 
-      "m".synopsis, 
-      "m".is_deleted, 
-      "m".created_at, 
-      "m".updated_at
-  	FROM public.movies "m"
-  	LEFT JOIN public.genre_movies gm ON "m"."id" = "gm"."movie_id"
-  	LEFT JOIN public.genres "g" ON "gm"."genre_id" = "g"."id"
+				m.id, 
+				m.title, 
+				m.image, 
+				m.banner,
+				COALESCE(STRING_AGG(DISTINCT g.name, ', '), '') AS genres,
+				m.director, 
+				m.casts, 
+				m.duration, 
+				m.release_date, 
+				m.synopsis, 
+				m.is_deleted, 
+				m.created_at, 
+				m.updated_at,
+    COALESCE(
+        STRING_AGG(
+            DISTINCT 
+            CONCAT(
+                ad.start_date::text, ' - ', 
+                ad.end_date::text
+            ), 
+            ', '
+        ), 
+        ''
+    ) AS airing_dates,
+    COALESCE(
+        STRING_AGG(
+            DISTINCT at.time::text, 
+            ', '
+        ), 
+        ''
+    ) AS airing_times,
+    COALESCE(
+        STRING_AGG(
+            DISTINCT l.name, 
+            ', '
+        ), 
+        ''
+    ) AS locations
+		FROM public.movies m
+		LEFT JOIN public.genre_movies gm ON m.id = gm.movie_id
+		LEFT JOIN public.genres g ON gm.genre_id = g.id
+		LEFT JOIN public.movies_time mt ON m.id = mt.movie_id
+		LEFT JOIN public.airing_time_date atd ON mt.airing_time_date_id = atd.id
+		LEFT JOIN public.airing_date ad ON atd.date_id = ad.id
+		LEFT JOIN public.airing_time at ON atd.airing_time_id = at.id
+		LEFT JOIN public.location_movie_time lmt ON mt.id = lmt.movie_time_id
+		LEFT JOIN public.locations l ON lmt.location_id = l.id
+		WHERE m.id = $1 AND m.is_deleted = FALSE
+		GROUP BY 
+				m.id, 
+				m.title, 
+				m.image, 
+				m.banner,
+				m.director, 
+				m.casts, 
+				m.duration, 
+				m.release_date, 
+				m.synopsis, 
+				m.is_deleted, 
+				m.created_at, 
+				m.updated_at;
   `
 
-	var result models.Movies
-	if err := r.Get(&result, query, id); err != nil {
+	var result models.MovieDetails
+
+	row := r.DB.QueryRow(query, id)
+	err := row.Scan(
+		&result.Id,
+		&result.Title,
+		&result.Image,
+		&result.Banner,
+		&result.Genres,
+		&result.Director,
+		&result.Casts,
+		&result.Duration,
+		&result.Release_Date,
+		&result.Synopsis,
+		&result.Is_deleted,
+		&result.Created_at,
+		&result.Updated_at,
+		&result.AiringDates,
+		&result.AiringTimes,
+		&result.Locations,
+	)
+	if err != nil {
 		return nil, err
 	}
 
 	return &result, nil
 }
 
-func (r *RepoMovies) UpdateMovie(id string, data *models.Movies) (string, error) {
+func (r *RepoMovies) UpdateMovieDetails(tx *sqlx.Tx, id string, data *models.MoviesBody) (*models.Movies, error) {
+	// Update query
+	query := `
+		UPDATE public.movies
+		SET title = COALESCE(NULLIF($1, ''), title),
+			image = COALESCE(NULLIF($2, ''), image),
+			director = COALESCE(NULLIF($3, ''), director),
+			casts = COALESCE(NULLIF($4, ''), casts),
+			duration = COALESCE(NULLIF($5, ''), duration),
+			release_date = COALESCE(NULLIF($6, release_date::date), release_date::date),
+			synopsis = COALESCE(NULLIF($7, ''), synopsis)
+		WHERE id = $8
+		RETURNING id, title, image, director, casts, duration, release_date, synopsis, created_at, updated_at;
+	`
+
+	// Execute update query using tx
+	var result models.Movies
+	row := tx.QueryRow(query,
+		data.Title,
+		data.Image,
+		data.Director,
+		data.Casts,
+		data.Duration,
+		data.Release_Date,
+		data.Synopsis,
+		id,
+	)
+
+	err := row.Scan(
+		&result.Id,
+		&result.Title,
+		&result.Image,
+		&result.Director,
+		&result.Casts,
+		&result.Duration,
+		&result.Release_Date,
+		&result.Synopsis,
+		&result.Created_at,
+		&result.Updated_at,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("no rows updated for id %s", id)
+		}
+		return nil, fmt.Errorf("failed to update movie details: %w", err)
+	}
+
+	// Query to get genres
+	genreQuery := `
+		SELECT COALESCE(STRING_AGG(g.name, ', '), '') AS genres
+		FROM public.genre_movies gm
+		JOIN public.genres g ON gm.genre_id = g.id
+		WHERE gm.movie_id = $1
+	`
+
+	// Execute genre query using tx
+	var genres string
+	err = tx.QueryRow(genreQuery, id).Scan(&genres)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve genres: %w", err)
+	}
+
+	// Add genres to the result
+	result.Genres = &genres
+
+	return &result, nil
+}
+
+func (r *RepoMovies) UpdateBannerMovie(id string, data *models.MoviesBanner) (string, error) {
 	query := `
     UPDATE public.movies
     SET
-      "title" = COALESCE(NULLIF(:title, ''), "title"),
-      "image" = COALESCE(NULLIF(:image, ''), "image"),
-      "director" = COALESCE(NULLIF(:director, ''), "director"),
-      "casts" = COALESCE(NULLIF(:casts, ''), "casts"),
-      "duration" = COALESCE(NULLIF(:duration, ''), "duration"),
-      "release_date" = COALESCE(NULLIF(:release_date, ''), "release_date"),
-      "synopsis" = COALESCE(NULLIF(:synopsis, ''), "synopsis"),
+      "banner" = COALESCE(NULLIF(:banner, ''), "banner"),
 			"updated_at" = now()
     WHERE "id" = :id
-    RETURNING *
   `
 	data.Id = id
 
@@ -196,7 +330,10 @@ func (r *RepoMovies) UpdateMovie(id string, data *models.Movies) (string, error)
 
 func (r *RepoMovies) DeleteMovie(id string) (string, error) {
 	query := `
-    DELETE FROM public.movies
+    UPDATE public.movies
+		SET
+			"is_deleted" = TRUE,
+      "updated_at" = now()
     WHERE "id" = $1
     RETURNING *
   `

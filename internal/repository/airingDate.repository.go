@@ -2,34 +2,38 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 	models "khalifgfrz/coffee-shop-be-go/internal/models/moviesAdd"
 
 	"github.com/jmoiron/sqlx"
 )
 
 type AiringDateRepoInterface interface {
-	CreateAiringDate(dates *models.AiringDate) ([]models.AiringDate, error)
+	CreateAiringDate(tx *sqlx.Tx, dates *models.AiringDate) ([]models.AiringDate, error)
 	GetAiringDate() (*models.AiringDate, error)
-	GetAiringDateByInput(input *models.AiringDate) (*models.AiringDate, error)
+	GetAiringDateByInput(tx *sqlx.Tx, input *models.AiringDate) (*models.AiringDate, error)
 }
 
 type RepoAiringDate struct {
 	*sqlx.DB
+	*RepoAiringTimeDate
 }
 
 func NewAiringDateRepository(db *sqlx.DB) *RepoAiringDate {
-	return &RepoAiringDate{db}
+	return &RepoAiringDate{db, &RepoAiringTimeDate{}}
 }
 
 // insert dynamically
-func (r *RepoAiringDate) CreateAiringDate(dates *models.AiringDate) ([]models.AiringDate, error) {
+func (r *RepoAiringDate) CreateAiringDate(tx *sqlx.Tx, dates *models.AiringDate) ([]models.AiringDate, error) {
 	// insert start_date and end_date into database
 	query := `INSERT INTO airing_date (start_date, end_date) 
 	VALUES (:start_date, :end_date)
 	RETURNING id, start_date, end_date, created_at, updated_at`
 
+	fmt.Println(dates)
+
 	var results []models.AiringDate
-	rows, err := r.DB.NamedQuery(query, dates)
+	rows, err := tx.NamedQuery(query, dates)
 	if err != nil {
 		return nil, err
 	}
@@ -55,12 +59,12 @@ func (r *RepoAiringDate) GetAiringDate() (*models.AiringDate, error) {
 	return &airingDate, err
 }
 
-func (r *RepoAiringDate) GetAiringDateByInput(input *models.AiringDate) (*models.AiringDate, error) {
+func (r *RepoAiringDate) GetAiringDateByInput(tx *sqlx.Tx, input *models.AiringDate) (*models.AiringDate, error) {
 	query := `SELECT id, start_date, end_date, created_at, updated_at FROM airing_date
 	WHERE start_date = $1 AND end_date = $2`
 
 	var airingDate models.AiringDate
-	err := r.DB.Get(&airingDate, query, input.Start_date, input.End_date)
+	err := tx.Get(&airingDate, query, input.Start_date, input.End_date)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
