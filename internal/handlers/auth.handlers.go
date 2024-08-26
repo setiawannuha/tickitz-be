@@ -26,25 +26,25 @@ func (h *AuthHandler) Register(ctx *gin.Context) {
 	body := models.Auth{}
 
 	if err := ctx.ShouldBind(&body); err != nil {
-		response.BadRequest("Register failed", err.Error())
+		response.BadRequest("Register failed", "Error")
 		return
 	}
 
 	_, err := govalidator.ValidateStruct(&body)
 	if err != nil {
-		response.BadRequest("Register failed", err.Error())
+		response.BadRequest("Register failed", "Error")
 		return
 	}
 
 	body.Password, err = pkg.HashPassword(body.Password)
 	if err != nil {
-		response.BadRequest("Register failed", err.Error())
+		response.BadRequest("Register failed", "Error")
 		return
 	}
 
 	result, err := h.CreateData(&body)
 	if err != nil {
-		response.BadRequest("Register failed", err.Error())
+		response.BadRequest("Register failed", "Error")
 		return
 	}
 
@@ -56,32 +56,32 @@ func (h *AuthHandler) Login(ctx *gin.Context) {
 	body := models.Auth{}
 
 	if err := ctx.ShouldBind(&body); err != nil {
-		response.BadRequest("Login failed", err.Error())
+		response.BadRequest("Login failed", "Error")
 		return
 	}
 
 	_, err := govalidator.ValidateStruct(&body)
 	if err != nil {
-		response.BadRequest("Login failed", err.Error())
+		response.BadRequest("Login failed", "Error")
 		return
 	}
 
 	result, err := h.GetByEmail(body.Email)
 	if err != nil {
-		response.BadRequest("Login failed", err.Error())
+		response.BadRequest("Login failed", "Error")
 		return
 	}
 
 	err = pkg.VerifyPassword(result.Password, body.Password)
 	if err != nil {
-		response.Unauthorized("Wrong password", err.Error())
+		response.Unauthorized("Wrong password", "Error")
 		return
 	}
 
 	jwt := pkg.NewJWT(result.Id, result.Email, result.Role)
 	token, err := jwt.GenerateToken()
 	if err != nil {
-		response.Unauthorized("Failed generate token", err.Error())
+		response.Unauthorized("Failed generate token", "Error")
 		return
 	}
 
@@ -98,7 +98,7 @@ func (h *AuthHandler) Update(ctx *gin.Context) {
 	id := userID.(string)
 	body := models.User{}
 	if err := ctx.ShouldBind(&body); err != nil {
-		response.BadRequest("Update data failed", err.Error())
+		response.BadRequest("Update data failed", "Error")
 		return
 	}
 	file, header, err := ctx.Request.FormFile("image")
@@ -128,14 +128,14 @@ func (h *AuthHandler) Update(ctx *gin.Context) {
 	if body.Password != "" {
 		body.Password, err = pkg.HashPassword(body.Password)
 		if err != nil {
-			response.BadRequest("Update data failed", err.Error())
+			response.BadRequest("Update data failed", "Error")
 			return
 		}
 	}
 
 	result, err := h.UpdateData(&body, id)
 	if err != nil {
-		response.InternalServerError("Update data failed", err.Error())
+		response.InternalServerError("Update data failed", "Error")
 		return
 	}
 
@@ -147,7 +147,7 @@ func (h *AuthHandler) Update(ctx *gin.Context) {
 
 // 	result, err := h.GetAllData()
 // 	if err != nil {
-// 		response.InternalServerError("get data failed", err.Error())
+// 		response.InternalServerError("get data failed", "Error")
 // 		return
 // 	}
 
@@ -164,7 +164,7 @@ func (h *AuthHandler) FetchDetail(ctx *gin.Context) {
 	id := userID.(string)
 	result, err := h.GetDetailData(id)
 	if err != nil {
-		response.InternalServerError("Get data failed", err.Error())
+		response.InternalServerError("Get data failed", "Error")
 		return
 	}
 
@@ -181,7 +181,7 @@ func (h *AuthHandler) Delete(ctx *gin.Context) {
 	id := userID.(string)
 	result, err := h.DeleteData(id)
 	if err != nil {
-		response.InternalServerError("Delete data failed", err.Error())
+		response.InternalServerError("Delete data failed", "Error")
 		return
 	}
 

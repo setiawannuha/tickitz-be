@@ -22,19 +22,19 @@ func (h *OrderHandler) CreateOrder (ctx *gin.Context){
 	body := models.Order{}
 
 	if err := ctx.ShouldBind(&body); err != nil {
-		response.BadRequest("Create order failed", err.Error())
+		response.BadRequest("Create order failed", "Error")
 		return
 	}
 
 	orderID, err := h.CreateData(&body)
 	if err != nil {
-		response.BadRequest("Create order failed", err.Error())
+		response.BadRequest("Create order failed", "Error")
 		return
 	}
 	
 	result, err := h.CreateOrderDetails(orderID, body.Orders)
 	if err != nil {
-		response.BadRequest("Create order failed", err.Error())
+		response.BadRequest("Create order failed", "Error")
 		return
 	}
 
