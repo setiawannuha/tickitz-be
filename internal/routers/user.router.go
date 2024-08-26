@@ -2,6 +2,7 @@ package routers
 
 import (
 	"khalifgfrz/coffee-shop-be-go/internal/handlers"
+	"khalifgfrz/coffee-shop-be-go/internal/middlewares"
 	"khalifgfrz/coffee-shop-be-go/internal/repository"
 	"khalifgfrz/coffee-shop-be-go/pkg"
 
@@ -19,9 +20,9 @@ func authRouter(g *gin.Engine, d *sqlx.DB) {
 
 	router.POST("/register", handler.Register)
 	router.POST("/login", handler.Login)
-	router.PATCH("/settings" , handler.Update)
+	router.PATCH("/settings", middleware.Auth("admin", "user"), handler.Update)
 	// router.GET("/", handler.FetchAll)
-	router.GET("/profile", handler.FetchDetail)
-	router.DELETE("/delete" , handler.Delete)
-	
+	router.GET("/profile", middleware.Auth("admin", "user"), handler.FetchDetail)
+	router.DELETE("/delete", middleware.Auth("admin", "user"), handler.Delete)
+
 }
