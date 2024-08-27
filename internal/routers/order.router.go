@@ -15,7 +15,9 @@ func orderRouter(g *gin.Engine, d *sqlx.DB) {
 	var orderRepo repository.OrderRepositoryInterface = repository.NewOrderRepository(d)
 	var orderDetailsRepo repository.OrderDetailsRepositoryInterface = repository.NewOrderDetailsRepository(d)
 	var paymentRepo repository.PaymentsRepoInterface = repository.NewPaymentsRepository(d)
-	handler := handlers.NewOrderHandler(orderRepo, orderDetailsRepo, paymentRepo)
+	var sales repository.SalesRepoInterface = repository.NewSalesRepository(d)
+	var movies repository.MovieRepoInterface = repository.NewMovieRepository(d)
+	handler := handlers.NewOrderHandler(orderRepo, orderDetailsRepo, paymentRepo, sales, movies)
 
 	router.POST("/", middleware.Auth("user"), handler.CreateOrder)
 	router.GET("/history", middleware.Auth("user"), handler.FetchHistory)
@@ -24,4 +26,5 @@ func orderRouter(g *gin.Engine, d *sqlx.DB) {
 
 	//additional
 	router.GET("/payments", handler.GetPayments)
+	router.GET("/dashboards", handler.FetchSales)
 }
