@@ -64,13 +64,13 @@ func (r *OrderRepository) GetDetailData(id string) (*models.GetOrder, error) {
     o.total,
     o.date AS date,
     o.time AS time,
-    ARRAY_AGG(DISTINCT g."name") AS genres
+    COALESCE(STRING_AGG(DISTINCT g.name, ', '), '') AS genres
 	FROM 
     public.orders o
 	JOIN 
     public.movies m ON o.movie_id = m.id
 	LEFT JOIN 
-    public.genre_movies gm ON gm.movie_id = m.id
+    public.genre_movies gm ON m.id = gm.movie_id
 	LEFT JOIN 
     public.genres g ON gm.genre_id = g.id
 	LEFT JOIN 
