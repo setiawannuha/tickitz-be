@@ -10,7 +10,7 @@ type OrderRepositoryInterface interface {
 	CreateData(body *models.Order) (string, error)
 	GetAllData() (*models.GetOrders, error)
 	GetDetailData(id string) (*models.GetOrder, error)
-	GetHistoryOrder(id string) (*models.GetOrder, error)
+	GetHistoryOrder(id string) (*models.GetOrders, error)
 }
 
 type OrderRepository struct {
@@ -92,10 +92,10 @@ func (r *OrderRepository) GetDetailData(id string) (*models.GetOrder, error) {
 	return &data, nil
 }
 
-func (r *OrderRepository) GetHistoryOrder(id string) (*models.GetOrder, error) {
+func (r *OrderRepository) GetHistoryOrder(id string) (*models.GetOrders, error) {
 	query := `
 	SELECT 
-		o.id,
+	o.id,
     m.title AS movie_title,
     o.seat_count,
     o.ticket_status,
@@ -120,7 +120,7 @@ func (r *OrderRepository) GetHistoryOrder(id string) (*models.GetOrder, error) {
 	ORDER BY 
     o.date ASC;
 `
-	data := models.GetOrder{}
+	data := models.GetOrders{}
 
 	err := r.Get(&data, query, id)
 	if err != nil {

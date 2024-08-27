@@ -104,15 +104,17 @@ func (h *OrderHandler) FetchHistory(ctx *gin.Context) {
 		return
 	}
 
-	orderID := history.Id
+	for i, order := range *history {
+		orderID := order.Id
 
-	orderDetails, err := h.GetDetailOrder(orderID)
+		orderDetails, err := h.GetDetailOrder(orderID)
+		if err != nil {
+			response.InternalServerError("Get data failed", err.Error())
+			return
+		}
 
-	if err != nil {
-		response.InternalServerError("Get data failed", err.Error())
-		return
+		(*history)[i].Orders = *orderDetails
 	}
-
-	history.Orders = *orderDetails
+	
 	response.Success("Get data success", history)
 }
