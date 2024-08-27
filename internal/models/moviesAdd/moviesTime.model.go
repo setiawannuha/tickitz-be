@@ -3,15 +3,23 @@ package moviesAdd
 import "time"
 
 var schemaMoviesTime = `
-CREATE TABLE public.movies_time (
-	id serial4 NOT NULL,
-	movie_id uuid NULL,
-	airing_time_date_id int4 NULL,
+CREATE TABLE public.orders (
+	id uuid NOT NULL DEFAULT gen_random_uuid(),
+	order_number text NULL,
+	user_id uuid NULL,
+	payment_method_id int4 NULL,
+	seat_count int4 NULL,
+	ticket_status varchar(20) NULL,
 	created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-	CONSTRAINT movies_time_pkey PRIMARY KEY (id),
-	CONSTRAINT movies_time_airing_time_date_id_fkey FOREIGN KEY (airing_time_date_id) REFERENCES public.airing_time_date(id) ON DELETE CASCADE,
-	CONSTRAINT movies_time_movie_id_fkey FOREIGN KEY (movie_id) REFERENCES public.movies(id) ON DELETE CASCADE
+	total int4 NULL,
+	movie_id uuid NULL,
+	"date" date NULL,
+	"time" time NULL,
+	CONSTRAINT orders_pkey PRIMARY KEY (id),
+	CONSTRAINT orders_movie_id_fkey FOREIGN KEY (movie_id) REFERENCES public.movies(id),
+	CONSTRAINT orders_payment_method_id_fkey FOREIGN KEY (payment_method_id) REFERENCES public.payment_methods(id),
+	CONSTRAINT orders_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
 );
 `
 

@@ -1,5 +1,7 @@
 package models
 
+import "github.com/lib/pq"
+
 var schemaOrderDetails = `
 CREATE TABLE public.order_details (
 	id serial4 NOT NULL,
@@ -19,6 +21,7 @@ type OrderDetails struct {
 }
 
 type GetOrderDetails struct {
-	Order_id *string `db:"order_id" form:"order_id" json:"order_id"`
-	Seat_id  *int    `db:"seat_id" form:"seat_id" json:"seat_id"`
+	Order_id   *string        `db:"order_id" form:"order_id" json:"order_id"`
+	Seat_id    pq.Int64Array  `db:"seat_id" form:"seat_id" json:"seat_id"`
+	Seat_names pq.StringArray `db:"seat_names" form:"seat_names" json:"seat_names"`
 }

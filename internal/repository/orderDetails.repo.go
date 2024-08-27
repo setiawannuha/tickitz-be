@@ -7,8 +7,8 @@ import (
 )
 
 type OrderDetailsRepositoryInterface interface {
-	CreateOrderDetails(order_id string, orders []models.OrderDetails)(string, error)
-	GetDetailOrder(order_id string)(*[]models.GetOrderDetails, error)
+	CreateOrderDetails(order_id string, orders []models.OrderDetails) (string, error)
+	GetDetailOrder(order_id string) (*[]models.GetOrderDetails, error)
 }
 
 type OrderDetailsRepository struct {
@@ -19,32 +19,46 @@ func NewOrderDetailsRepository(db *sqlx.DB) *OrderDetailsRepository {
 	return &OrderDetailsRepository{db}
 }
 
-func (r *OrderDetailsRepository) CreateOrderDetails(order_id string, orders []models.OrderDetails)(string, error){
+func (r *OrderDetailsRepository) CreateOrderDetails(order_id string, orders []models.OrderDetails) (string, error) {
 	query := `INSERT INTO public.order_details
 	(order_id, seat_id)
 	VALUES(:order_id, :seat_id);`
 
-	for _, order:=range orders {
+	for _, order := range orders {
 		data := map[string]interface{}{
-			"order_id":order_id,
-			"seat_id":order.Seat_id,
+			"order_id": order_id,
+			"seat_id":  order.Seat_id,
 		}
 		_, err := r.NamedExec(query, data)
 		if err != nil {
 			return "", err
 		}
 	}
-    return "Order created", nil
+	return "Order created", nil
 }
 
-func (r *OrderDetailsRepository) GetDetailOrder(order_id string)(*[]models.GetOrderDetails, error){
-	query := `select order_id, seat_id from order_details where order_id=$1`
+func (r *OrderDetailsRepository) GetDetailOrder(order_id string) (*[]models.GetOrderDetails, error) {
+	query := `SELECT 
+        od.order_id, 
+        array_agg(od.seat_id) AS seat_id, 
+        array_agg(s.name) AS seat_names
+    FROM 
+        order_details od
+    JOIN 
+        seats s 
+    ON 
+        od.seat_id = s.id
+    WHERE 
+        od.order_id = $1
+    GROUP BY 
+        od.order_id;`
+
 	data := []models.GetOrderDetails{}
 
 	err := r.Select(&data, query, order_id)
 	if err != nil {
 		return nil, err
 	}
+
 	return &data, nil
 }
-
