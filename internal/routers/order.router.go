@@ -16,8 +16,8 @@ func orderRouter(g *gin.Engine, d *sqlx.DB) {
 	var orderDetailsRepo repository.OrderDetailsRepositoryInterface = repository.NewOrderDetailsRepository(d)
 	handler := handlers.NewOrderHandler(orderRepo, orderDetailsRepo)
 
-	router.POST("/", handler.CreateOrder)
+	router.POST("/", middleware.Auth("user"), handler.CreateOrder)
 	router.GET("/history", middleware.Auth("user"), handler.FetchHistory)
-	router.GET("/", handler.FetchAll)
-	router.GET("/:id", handler.FetchDetail)
+	router.GET("/", middleware.Auth("admin"), handler.FetchAll)
+	router.GET("/:id", middleware.Auth("user"), handler.FetchDetail)
 }

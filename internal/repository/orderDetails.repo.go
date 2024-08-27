@@ -8,7 +8,7 @@ import (
 
 type OrderDetailsRepositoryInterface interface {
 	CreateOrderDetails(order_id string, orders []models.OrderDetails) (string, error)
-	GetDetailOrder(order_id string) (*[]models.GetOrderDetails, error)
+	GetDetailOrder(order_id string) ([]models.GetOrderDetails, error)
 }
 
 type OrderDetailsRepository struct {
@@ -37,7 +37,7 @@ func (r *OrderDetailsRepository) CreateOrderDetails(order_id string, orders []mo
 	return "Order created", nil
 }
 
-func (r *OrderDetailsRepository) GetDetailOrder(order_id string) (*[]models.GetOrderDetails, error) {
+func (r *OrderDetailsRepository) GetDetailOrder(order_id string) ([]models.GetOrderDetails, error) {
 	query := `SELECT 
         od.order_id, 
         array_agg(od.seat_id) AS seat_id, 
@@ -53,12 +53,12 @@ func (r *OrderDetailsRepository) GetDetailOrder(order_id string) (*[]models.GetO
     GROUP BY 
         od.order_id;`
 
-	data := []models.GetOrderDetails{}
+	var data []models.GetOrderDetails
 
 	err := r.Select(&data, query, order_id)
 	if err != nil {
 		return nil, err
 	}
 
-	return &data, nil
+	return data, nil
 }

@@ -10,7 +10,7 @@ type OrderRepositoryInterface interface {
 	CreateData(body *models.Order) (string, error)
 	GetAllData() (*models.GetOrders, error)
 	GetDetailData(id string) (*models.GetOrder, error)
-	GetHistoryOrder(id string) (*models.GetOrders, error)
+	GetHistoryOrder(id string) ([]models.GetOrder, error)
 }
 
 type OrderRepository struct {
@@ -92,17 +92,18 @@ func (r *OrderRepository) GetDetailData(id string) (*models.GetOrder, error) {
 	return &data, nil
 }
 
-func (r *OrderRepository) GetHistoryOrder(id string) (*models.GetOrders, error) {
+func (r *OrderRepository) GetHistoryOrder(id string) ([]models.GetOrder, error) {
 	query := `
 	SELECT 
-	o.id,
+    o.id,
+		o.order_number,
     m.title AS movie_title,
     o.seat_count,
     o.ticket_status,
     o.total,
     o.date AS date,
     o.time AS time,
-    ARRAY_AGG(DISTINCT g."name") AS genres
+    ARRAY_AGG(DISTINCT g."name")::TEXT[] AS genres
 	FROM 
     public.orders o
 	JOIN 
@@ -111,20 +112,19 @@ func (r *OrderRepository) GetHistoryOrder(id string) (*models.GetOrders, error) 
     public.genre_movies gm ON gm.movie_id = m.id
 	LEFT JOIN 
     public.genres g ON gm.genre_id = g.id
-	LEFT JOIN 
-    public.order_details od ON od.order_id = o.id
 	WHERE 
     o.user_id = $1
 	GROUP BY 
-    o.id, m.title, o.seat_count, o.ticket_status, o.total, o.date, o.time
+    o.id, o.order_number, m.title, o.seat_count, o.ticket_status, o.total, o.date, o.time
 	ORDER BY 
     o.date ASC;
-`
-	data := models.GetOrders{}
 
-	err := r.Get(&data, query, id)
+	`
+	var data []models.GetOrder
+
+	err := r.Select(&data, query, id)
 	if err != nil {
 		return nil, err
 	}
-	return &data, nil
+	return data, nil
 }
