@@ -70,50 +70,57 @@ func (r *RepoMovies) CreateMovie(tx *sqlx.Tx, data *models.MoviesBody) (*models.
 
 func (r *RepoMovies) GetAllMovies(query *models.MoviesQuery) (*models.MovieResponse, int, error) {
 	baseQuery := `
-  	SELECT 
-      "m".id, 
-      "m".title, 
-      "m".image, 
+		SELECT 
+			"m".id, 
+			"m".title, 
+			"m".image, 
 			"m".banner,
-      COALESCE(STRING_AGG("g"."name", ', '), '') AS genres,
-      "m".director, 
-      "m".casts, 
-      "m".duration, 
-      "m".release_date, 
-      "m".synopsis, 
-      "m".is_deleted, 
-      "m".created_at, 
-      "m".updated_at
-  	FROM public.movies "m"
-  	LEFT JOIN public.genre_movies gm ON "m"."id" = "gm"."movie_id"
-  	LEFT JOIN public.genres "g" ON "gm"."genre_id" = "g"."id"
-    `
+			COALESCE(STRING_AGG("g"."name", ', '), '') AS genres,
+			"m".director, 
+			"m".casts, 
+			"m".duration, 
+			"m".release_date, 
+			"m".synopsis, 
+			"m".is_deleted, 
+			"m".created_at, 
+			"m".updated_at
+		FROM public.movies "m"
+		LEFT JOIN public.genre_movies gm ON "m"."id" = "gm"."movie_id"
+		LEFT JOIN public.genres "g" ON "gm"."genre_id" = "g"."id"
+	`
+
 	countQuery := `
-      SELECT COUNT(DISTINCT "m"."id") 
-      FROM public.movies m
-      LEFT JOIN public.genre_movies gm ON "m"."id" = "gm"."movie_id"
-      LEFT JOIN public.genres "g" ON "gm"."genre_id" = "g"."id"
-      WHERE "m"."is_deleted" = FALSE
-    `
+		SELECT COUNT(DISTINCT "m"."id") 
+		FROM public.movies m
+		LEFT JOIN public.genre_movies gm ON "m"."id" = "gm"."movie_id"
+		LEFT JOIN public.genres "g" ON "gm"."genre_id" = "g"."id"
+		WHERE "m"."is_deleted" = FALSE
+	`
+
 	whereClauses := []string{}
 	var values []interface{}
 
 	if query.Search != nil {
 		searchTerm := "%" + *query.Search + "%"
-		whereClauses = append(whereClauses, fmt.Sprintf(`m.title ILIKE $%d`, len(values)+1))
+		whereClauses = append(whereClauses, fmt.Sprintf(`"m"."title" ILIKE $%d`, len(values)+1))
 		values = append(values, searchTerm)
 	}
 
+	// Filter by genre, considering that a movie may have multiple genres
 	if query.Filter != nil {
 		filterTerm := *query.Filter
-		whereClauses = append(whereClauses, fmt.Sprintf(`"g"."name" = $%d`, len(values)+1))
+		whereClauses = append(whereClauses, fmt.Sprintf(`EXISTS (
+			SELECT 1 FROM public.genre_movies gm2
+			JOIN public.genres g2 ON gm2.genre_id = g2.id
+			WHERE gm2.movie_id = "m".id AND g2.name = $%d
+		)`, len(values)+1))
 		values = append(values, filterTerm)
 	}
 
 	if len(whereClauses) > 0 {
 		whereQuery := " WHERE " + strings.Join(whereClauses, " AND ")
 		baseQuery += whereQuery
-		countQuery += whereQuery
+		countQuery += " AND " + strings.Join(whereClauses, " AND ")
 	}
 
 	baseQuery += ` GROUP BY "m"."id"`
@@ -124,6 +131,8 @@ func (r *RepoMovies) GetAllMovies(query *models.MoviesQuery) (*models.MovieRespo
 		baseQuery += fmt.Sprintf(` LIMIT $%d OFFSET $%d`, len(values)+1, len(values)+2)
 		values = append(values, limit, offset)
 	}
+
+	fmt.Println(baseQuery)
 
 	var data models.MovieResponse
 	if err := r.Select(&data, baseQuery, values...); err != nil {
