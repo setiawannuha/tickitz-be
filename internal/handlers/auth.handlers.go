@@ -85,7 +85,13 @@ func (h *AuthHandler) Login(ctx *gin.Context) {
 		return
 	}
 
-	response.Created("Login success", token)
+	response.Success("Login success", gin.H{
+        "token": token,
+        "user": gin.H{
+            "email":      result.Email,
+            "role":       result.Role,
+        },
+    })
 }
 
 func (h *AuthHandler) Update(ctx *gin.Context) {
