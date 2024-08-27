@@ -90,6 +90,7 @@ func (h *AuthHandler) Login(ctx *gin.Context) {
         "user": gin.H{
             "email":      result.Email,
             "role":       result.Role,
+            "image":       result.Image,
         },
     })
 }

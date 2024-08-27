@@ -49,10 +49,11 @@ type UserAll struct {
 }
 
 type Auth struct {
-	Id       string `db:"id" json:"id" form:"id" valid:"-"`
-	Email    string `db:"email" json:"email" form:"email" valid:"email"`
-	Password string `db:"password" json:"password" form:"password" valid:"stringlength(5|256)~Password minimal 5 karakter"`
-	Role     string `db:"role" json:"role" form:"role" valid:"-"`
+	Id       string  `db:"id" json:"id" form:"id" valid:"-"`
+	Email    string  `db:"email" json:"email" form:"email" valid:"email"`
+	Password string  `db:"password" json:"password" form:"password" valid:"stringlength(5|256)~Password minimal 5 karakter"`
+	Role     string  `db:"role" json:"role" form:"role" valid:"-"`
+	Image    *string `db:"image" json:"image" form:"image" valid:"-"`
 }
 
 type Users []UserAll
