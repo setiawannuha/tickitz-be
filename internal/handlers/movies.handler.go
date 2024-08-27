@@ -159,6 +159,8 @@ func (h *HandlerMovie) InsertMovies(ctx *gin.Context) {
 	}
 
 	// Step 2: Link Movie ID with Genre IDs based on genres []int
+	// [2,4]
+	// [2,3,5]
 	for _, genreId := range genres {
 		genreMovie := moviesAdd.GenreMovie{
 			Movie_id: results.Id,
@@ -411,254 +413,254 @@ func (h *HandlerMovie) BannerUpdate(ctx *gin.Context) {
 	response.Success("Data Updated", results)
 }
 
-// func (h *HandlerMovie) UpdateMovies(ctx *gin.Context) {
-// 	response := pkg.NewResponse(ctx)
-// 	id := ctx.Param("id")
-// 	if id == "" {
-// 		fmt.Println("Invalid or missing 'id' parameter")
-// 		response.BadRequest("Invalid or missing 'id' parameter", nil)
-// 		return
-// 	}
+func (h *HandlerMovie) UpdateMovies(ctx *gin.Context) {
+	response := pkg.NewResponse(ctx)
+	id := ctx.Param("id")
+	if id == "" {
+		fmt.Println("Invalid or missing 'id' parameter")
+		response.BadRequest("Invalid or missing 'id' parameter", nil)
+		return
+	}
 
-// 	var movies models.MoviesBody
+	var movies models.MoviesBody
 
-// 	fmt.Println("Starting transaction")
-// 	tx, err := h.DB.Beginx()
-// 	if err != nil {
-// 		fmt.Println("Failed to start transaction:", err.Error())
-// 		response.InternalServerError("Failed to start transaction", err.Error())
-// 		return
-// 	}
+	fmt.Println("Starting transaction")
+	tx, err := h.DB.Beginx()
+	if err != nil {
+		fmt.Println("Failed to start transaction:", err.Error())
+		response.InternalServerError("Failed to start transaction", err.Error())
+		return
+	}
 
-// 	defer func() {
-// 		if r := recover(); r != nil {
-// 			tx.Rollback()
-// 			fmt.Println("Transaction rolled back due to panic:", r)
-// 		}
-// 	}()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+			fmt.Println("Transaction rolled back due to panic:", r)
+		}
+	}()
 
-// 	fmt.Println("Binding input data")
-// 	if err := ctx.ShouldBind(&movies); err != nil {
-// 		tx.Rollback()
-// 		fmt.Println("Failed to bind input data:", err.Error())
-// 		response.BadRequest("Invalid input", err.Error())
-// 		return
-// 	}
+	fmt.Println("Binding input data")
+	if err := ctx.ShouldBind(&movies); err != nil {
+		tx.Rollback()
+		fmt.Println("Failed to bind input data:", err.Error())
+		response.BadRequest("Invalid input", err.Error())
+		return
+	}
 
-// 	fmt.Println("Validating movie data")
-// 	_, err = govalidator.ValidateStruct(&movies)
-// 	if err != nil {
-// 		tx.Rollback()
-// 		fmt.Println("Validation failed:", err.Error())
-// 		response.BadRequest("Validation failed", err.Error())
-// 		return
-// 	}
+	fmt.Println("Validating movie data")
+	_, err = govalidator.ValidateStruct(&movies)
+	if err != nil {
+		tx.Rollback()
+		fmt.Println("Validation failed:", err.Error())
+		response.BadRequest("Validation failed", err.Error())
+		return
+	}
 
-// 	// Handle file upload if provided
-// 	if ctx.Request.MultipartForm != nil {
-// 		fmt.Println("Handling file upload")
-// 		file, header, err := ctx.Request.FormFile("image")
+	// Handle file upload if provided
+	if ctx.Request.MultipartForm != nil {
+		fmt.Println("Handling file upload")
+		file, header, err := ctx.Request.FormFile("image")
 
-// 		if err != nil && err.Error() != "http: no such file" {
-// 			tx.Rollback()
-// 			fmt.Println("Failed to retrieve file:", err.Error())
-// 			response.BadRequest("Failed to retrieve file", nil)
-// 			return
-// 		}
+		if err != nil && err.Error() != "http: no such file" {
+			tx.Rollback()
+			fmt.Println("Failed to retrieve file:", err.Error())
+			response.BadRequest("Failed to retrieve file", nil)
+			return
+		}
 
-// 		if file != nil {
-// 			mimeType := header.Header.Get("Content-Type")
-// 			if mimeType != "image/jpg" && mimeType != "image/jpeg" && mimeType != "image/png" {
-// 				tx.Rollback()
-// 				fmt.Println("Unsupported file type:", mimeType)
-// 				response.BadRequest("Unsupported file type", nil)
-// 				return
-// 			}
+		if file != nil {
+			mimeType := header.Header.Get("Content-Type")
+			if mimeType != "image/jpg" && mimeType != "image/jpeg" && mimeType != "image/png" {
+				tx.Rollback()
+				fmt.Println("Unsupported file type:", mimeType)
+				response.BadRequest("Unsupported file type", nil)
+				return
+			}
 
-// 			if header.Size > 2*1024*1024 {
-// 				tx.Rollback()
-// 				fmt.Println("File size exceeds 2 MB:", header.Size)
-// 				response.BadRequest("File size exceeds 2 MB", nil)
-// 				return
-// 			}
+			if header.Size > 2*1024*1024 {
+				tx.Rollback()
+				fmt.Println("File size exceeds 2 MB:", header.Size)
+				response.BadRequest("File size exceeds 2 MB", nil)
+				return
+			}
 
-// 			randomNumber := rand.Int()
-// 			fileName := fmt.Sprintf("movie-image-%d", randomNumber)
-// 			uploadResult, err := h.UploadFile(ctx, file, fileName)
-// 			if err != nil {
-// 				tx.Rollback()
-// 				fmt.Println("Failed to upload file:", err.Error())
-// 				response.InternalServerError("Failed to upload file", err.Error())
-// 				return
-// 			}
+			randomNumber := rand.Int()
+			fileName := fmt.Sprintf("movie-image-%d", randomNumber)
+			uploadResult, err := h.UploadFile(ctx, file, fileName)
+			if err != nil {
+				tx.Rollback()
+				fmt.Println("Failed to upload file:", err.Error())
+				response.InternalServerError("Failed to upload file", err.Error())
+				return
+			}
 
-// 			movies.Image = &uploadResult.SecureURL
-// 		}
-// 	}
+			movies.Image = &uploadResult.SecureURL
+		}
+	}
 
-// 	fmt.Println("Updating movie details")
-// 	updatedMovie, err := h.UpdateMovieDetails(tx, id, &movies)
-// 	if err != nil {
-// 		tx.Rollback()
-// 		fmt.Println("Failed to update movie details:", err.Error())
-// 		response.InternalServerError("Failed to update movie details", err.Error())
-// 		return
-// 	}
+	fmt.Println("Updating movie details")
+	updatedMovie, err := h.UpdateMovieDetails(tx, id, &movies)
+	if err != nil {
+		tx.Rollback()
+		fmt.Println("Failed to update movie details:", err.Error())
+		response.InternalServerError("Failed to update movie details", err.Error())
+		return
+	}
 
-// 	// Optionally update genres if provided
-// 	if movies.Genres != nil {
-// 		fmt.Println("Updating movie genres")
-// 		genres, err := SplitCommaSeparatedInts(*movies.Genres)
-// 		if err != nil {
-// 			tx.Rollback()
-// 			fmt.Println("Error parsing genre IDs:", err.Error())
-// 			response.BadRequest("Invalid genre ID format", err.Error())
-// 			return
-// 		}
+	// Optionally update genres if provided
+	if movies.Genres != nil {
+		fmt.Println("Updating movie genres")
+		genres, err := SplitCommaSeparatedInts(*movies.Genres)
+		if err != nil {
+			tx.Rollback()
+			fmt.Println("Error parsing genre IDs:", err.Error())
+			response.BadRequest("Invalid genre ID format", err.Error())
+			return
+		}
 
-// 		if err := h.UpdateGenreMovie(tx, id, genres); err != nil {
-// 			tx.Rollback()
-// 			fmt.Println("Error updating movie genres:", err.Error())
-// 			response.InternalServerError("Failed to update movie genres", err.Error())
-// 			return
-// 		}
-// 	}
+		if err := h.UpdateGenreMovie(tx, id, genres); err != nil {
+			tx.Rollback()
+			fmt.Println("Error updating movie genres:", err.Error())
+			response.InternalServerError("Failed to update movie genres", err.Error())
+			return
+		}
+	}
 
-// 	if movies.AiringDate != nil && movies.AiringTime != nil {
-// 		fmt.Println("Updating movie airing details")
-// 		fmt.Println("AiringDate:", *movies.AiringDate) // Log AiringDate value
+	if movies.AiringDate != nil && movies.AiringTime != nil {
+		fmt.Println("Updating movie airing details")
+		fmt.Println("AiringDate:", *movies.AiringDate) // Log AiringDate value
 
-// 		airingTimes, err := SplitCommaSeparatedInts(*movies.AiringTime)
-// 		if err != nil {
-// 			tx.Rollback()
-// 			response.BadRequest("Invalid airing time format", err.Error())
-// 			return
-// 		}
+		airingTimes, err := SplitCommaSeparatedInts(*movies.AiringTime)
+		if err != nil {
+			tx.Rollback()
+			response.BadRequest("Invalid airing time format", err.Error())
+			return
+		}
 
-// 		if err := h.DeleteAiringTimeDatesByMovieID(tx, id); err != nil {
-// 			tx.Rollback()
-// 			fmt.Println("Error deleting airing time dates:", err.Error())
-// 			response.InternalServerError("Failed to delete airing time dates", err.Error())
-// 			return
-// 		}
+		if err := h.DeleteAiringTimeDatesByMovieID(tx, id); err != nil {
+			tx.Rollback()
+			fmt.Println("Error deleting airing time dates:", err.Error())
+			response.InternalServerError("Failed to delete airing time dates", err.Error())
+			return
+		}
 
-// 		for _, dateRange := range *movies.AiringDate {
-// 			dates := strings.Split(dateRange, ",")
-// 			var airingDate moviesAdd.AiringDate
+		for _, dateRange := range *movies.AiringDate {
+			dates := strings.Split(dateRange, ",")
+			var airingDate moviesAdd.AiringDate
 
-// 			if len(dates) == 2 {
-// 				airingDate = moviesAdd.AiringDate{
-// 					Start_date: strings.TrimSpace(dates[0]),
-// 					End_date:   strings.TrimSpace(dates[1]),
-// 				}
-// 			} else if len(dates) == 1 {
-// 				airingDate = moviesAdd.AiringDate{
-// 					Start_date: strings.TrimSpace(dates[0]),
-// 					End_date:   strings.TrimSpace(dates[0]),
-// 				}
-// 			} else {
-// 				tx.Rollback()
-// 				response.BadRequest("Invalid date range provided", "Expected one or two dates in the format [yyyy-mm-dd] or [yyyy-mm-dd, yyyy-mm-dd]")
-// 				return
-// 			}
+			if len(dates) == 2 {
+				airingDate = moviesAdd.AiringDate{
+					Start_date: strings.TrimSpace(dates[0]),
+					End_date:   strings.TrimSpace(dates[1]),
+				}
+			} else if len(dates) == 1 {
+				airingDate = moviesAdd.AiringDate{
+					Start_date: strings.TrimSpace(dates[0]),
+					End_date:   strings.TrimSpace(dates[0]),
+				}
+			} else {
+				tx.Rollback()
+				response.BadRequest("Invalid date range provided", "Expected one or two dates in the format [yyyy-mm-dd] or [yyyy-mm-dd, yyyy-mm-dd]")
+				return
+			}
 
-// 			existingAiringDate, err := h.GetAiringDateByInput(tx, &airingDate)
-// 			if err != nil {
-// 				tx.Rollback()
-// 				response.InternalServerError("Failed to check airing date", err.Error())
-// 				return
-// 			}
+			existingAiringDate, err := h.GetAiringDateByInput(tx, &airingDate)
+			if err != nil {
+				tx.Rollback()
+				response.InternalServerError("Failed to check airing date", err.Error())
+				return
+			}
 
-// 			if existingAiringDate != nil {
-// 				airingDate.Id = existingAiringDate.Id
-// 			} else {
-// 				insertedAiringDates, err := h.CreateAiringDate(tx, &airingDate)
-// 				if err != nil {
-// 					tx.Rollback()
-// 					response.InternalServerError("Failed to insert airing date", err.Error())
-// 					return
-// 				}
-// 				if len(insertedAiringDates) > 0 {
-// 					airingDate.Id = insertedAiringDates[0].Id
-// 				} else {
-// 					tx.Rollback()
-// 					response.InternalServerError("No airing date was inserted", "Expected a valid ID")
-// 					return
-// 				}
-// 			}
+			if existingAiringDate != nil {
+				airingDate.Id = existingAiringDate.Id
+			} else {
+				insertedAiringDates, err := h.CreateAiringDate(tx, &airingDate)
+				if err != nil {
+					tx.Rollback()
+					response.InternalServerError("Failed to insert airing date", err.Error())
+					return
+				}
+				if len(insertedAiringDates) > 0 {
+					airingDate.Id = insertedAiringDates[0].Id
+				} else {
+					tx.Rollback()
+					response.InternalServerError("No airing date was inserted", "Expected a valid ID")
+					return
+				}
+			}
 
-// 			// Step 4: Link AiringDate ID with AiringTime IDs based on airingTime []int
-// 			for _, airingTimeId := range airingTimes {
-// 				newAiringTimeDate := moviesAdd.AiringTimeDate{
-// 					Airing_time_id: airingTimeId,
-// 					Date_id:        airingDate.Id,
-// 				}
-// 				insertedAiringTimeDateId, err := h.InsertAiringTimeDate(tx, &newAiringTimeDate)
-// 				if err != nil {
-// 					tx.Rollback()
-// 					response.InternalServerError("Failed to insert airing time date", err.Error())
-// 					return
-// 				}
+			// Step 4: Link AiringDate ID with AiringTime IDs based on airingTime []int
+			for _, airingTimeId := range airingTimes {
+				newAiringTimeDate := moviesAdd.AiringTimeDate{
+					Airing_time_id: airingTimeId,
+					Date_id:        airingDate.Id,
+				}
+				insertedAiringTimeDateId, err := h.InsertAiringTimeDate(tx, &newAiringTimeDate)
+				if err != nil {
+					tx.Rollback()
+					response.InternalServerError("Failed to insert airing time date", err.Error())
+					return
+				}
 
-// 				// Step 5: Link Movie ID with AiringTimeDate ID and get MovieTime ID
-// 				movieTime := moviesAdd.MovieTime{
-// 					Movie_id:            updatedMovie.Id,
-// 					Airing_time_date_id: insertedAiringTimeDateId.Id,
-// 				}
-// 				insertedMovieTime, err := h.CreateMovieTime(tx, &movieTime)
-// 				if err != nil {
-// 					tx.Rollback()
-// 					response.InternalServerError("Failed to insert movie time", err.Error())
-// 					return
-// 				}
-// 				fmt.Println("Successfully updated airing details")
+				// Step 5: Link Movie ID with AiringTimeDate ID and get MovieTime ID
+				movieTime := moviesAdd.MovieTime{
+					Movie_id:            updatedMovie.Id,
+					Airing_time_date_id: insertedAiringTimeDateId.Id,
+				}
+				insertedMovieTime, err := h.CreateMovieTime(tx, &movieTime)
+				if err != nil {
+					tx.Rollback()
+					response.InternalServerError("Failed to insert movie time", err.Error())
+					return
+				}
+				fmt.Println("Successfully updated airing details")
 
-// 				// Optionally update locations if provided
-// 				if movies.Locations != nil {
-// 					fmt.Println("Updating movie locations")
-// 					locations, err := SplitCommaSeparatedInts(*movies.Locations)
-// 					if err != nil {
-// 						tx.Rollback()
-// 						fmt.Println("Error parsing location IDs:", err.Error())
-// 						response.BadRequest("Invalid location format", err.Error())
-// 						return
-// 					}
+				// Optionally update locations if provided
+				if movies.Locations != nil {
+					fmt.Println("Updating movie locations")
+					locations, err := SplitCommaSeparatedInts(*movies.Locations)
+					if err != nil {
+						tx.Rollback()
+						fmt.Println("Error parsing location IDs:", err.Error())
+						response.BadRequest("Invalid location format", err.Error())
+						return
+					}
 
-// 					deleted, err := h.DeleteLocationMovie(id)
-// 					if err != nil {
-// 						tx.Rollback()
-// 						fmt.Println("Error updating movie locations:", err.Error())
-// 						response.InternalServerError("Failed to update locations", err.Error())
-// 						return
-// 					}
-// 					if deleted != "" {
-// 						fmt.Println("Locations deleted:", deleted)
-// 					}
-// 					for _, locationId := range locations {
-// 						movieLocation := moviesAdd.LocationMovieTime{
-// 							Movie_time_id: insertedMovieTime.ID,
-// 							Location_id:   locationId,
-// 						}
-// 						if _, err := h.CreateLocationMovie(tx, &movieLocation); err != nil {
-// 							tx.Rollback()
-// 							response.InternalServerError("Failed to insert movie location", err.Error())
-// 							return
-// 						}
-// 					}
+					deleted, err := h.DeleteLocationMovie(id)
+					if err != nil {
+						tx.Rollback()
+						fmt.Println("Error updating movie locations:", err.Error())
+						response.InternalServerError("Failed to update locations", err.Error())
+						return
+					}
+					if deleted != "" {
+						fmt.Println("Locations deleted:", deleted)
+					}
+					for _, locationId := range locations {
+						movieLocation := moviesAdd.LocationMovieTime{
+							Movie_time_id: insertedMovieTime.ID,
+							Location_id:   locationId,
+						}
+						if _, err := h.CreateLocationMovie(tx, &movieLocation); err != nil {
+							tx.Rollback()
+							response.InternalServerError("Failed to insert movie location", err.Error())
+							return
+						}
+					}
 
-// 				}
+				}
 
-// 				fmt.Println("Committing transaction")
-// 				if err := tx.Commit(); err != nil {
-// 					tx.Rollback()
-// 					fmt.Println("Failed to commit transaction:", err.Error())
-// 					response.InternalServerError("Failed to commit transaction", err.Error())
-// 					return
-// 				}
+				fmt.Println("Committing transaction")
+				if err := tx.Commit(); err != nil {
+					tx.Rollback()
+					fmt.Println("Failed to commit transaction:", err.Error())
+					response.InternalServerError("Failed to commit transaction", err.Error())
+					return
+				}
 
-// 				fmt.Println("Movie updated successfully:", updatedMovie)
-// 				response.Success("Movie updated successfully", updatedMovie)
-// 			}
-// 		}
-// 	}
-// }
+				fmt.Println("Movie updated successfully:", updatedMovie)
+				response.Success("Movie updated successfully", updatedMovie)
+			}
+		}
+	}
+}
