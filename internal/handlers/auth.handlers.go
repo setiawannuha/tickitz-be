@@ -124,7 +124,7 @@ func (h *AuthHandler) Update(ctx *gin.Context) {
 		fileName := fmt.Sprintf("user-image-%d", randomNumber)
 		uploadResult, err := h.UploadFile(ctx, file, fileName)
 		if err != nil {
-			response.BadRequest("Create User failed, upload file failed", err.Error())
+			response.BadRequest("Create User failed, upload file failed", "Error")
 			return
 		}
 		imageURL := uploadResult.SecureURL
@@ -177,19 +177,19 @@ func (h *AuthHandler) FetchDetail(ctx *gin.Context) {
 	response.Success("Get data success", result)
 }
 
-func (h *AuthHandler) Delete(ctx *gin.Context) {
-	response := pkg.NewResponse(ctx)
-	userID, exists := ctx.Get("id")
-	if !exists {
-		response.NotFound("User doesn't exist", nil)
-		return
-	}
-	id := userID.(string)
-	result, err := h.DeleteData(id)
-	if err != nil {
-		response.InternalServerError("Delete data failed", "Error")
-		return
-	}
+// func (h *AuthHandler) Delete(ctx *gin.Context) {
+// 	response := pkg.NewResponse(ctx)
+// 	userID, exists := ctx.Get("id")
+// 	if !exists {
+// 		response.NotFound("User doesn't exist", nil)
+// 		return
+// 	}
+// 	id := userID.(string)
+// 	result, err := h.DeleteData(id)
+// 	if err != nil {
+// 		response.InternalServerError("Delete data failed", "Error")
+// 		return
+// 	}
 
-	response.Success("Delete data success", result)
-}
+// 	response.Success("Delete data success", result)
+// }

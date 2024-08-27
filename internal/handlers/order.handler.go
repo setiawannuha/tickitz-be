@@ -22,13 +22,13 @@ func (h *OrderHandler) CreateOrder(ctx *gin.Context) {
 	body := models.Order{}
 
 	if err := ctx.ShouldBind(&body); err != nil {
-		response.BadRequest("Create order failed 1", err.Error())
+		response.BadRequest("Create order failed 1", "Error")
 		return
 	}
 
 	orderID, err := h.CreateData(&body)
 	if err != nil {
-		response.BadRequest("Create order failed 2", err.Error())
+		response.BadRequest("Create order failed 2", "Error")
 		return
 	}
 
@@ -45,7 +45,7 @@ func (h *OrderHandler) FetchAll(ctx *gin.Context) {
 	response := pkg.NewResponse(ctx)
 	orders, err := h.GetAllData()
 	if err != nil {
-		response.InternalServerError("Get data failed", err.Error())
+		response.InternalServerError("Get data failed", "Error")
 		return
 	}
 	for i := range *orders {
@@ -53,7 +53,7 @@ func (h *OrderHandler) FetchAll(ctx *gin.Context) {
 
 		orderDetails, err := h.GetDetailOrder(order.Id)
 		if err != nil {
-			response.InternalServerError("Get data failed", err.Error())
+			response.InternalServerError("Get data failed", "Error")
 			return
 		}
 		order.Orders = *orderDetails
@@ -68,7 +68,7 @@ func (h *OrderHandler) FetchDetail(ctx *gin.Context) {
 	order, err := h.GetDetailData(id)
 
 	if err != nil {
-		response.InternalServerError("Get data failed", "error")
+		response.InternalServerError("Get data failed", "Error")
 		return
 	}
 
@@ -77,7 +77,7 @@ func (h *OrderHandler) FetchDetail(ctx *gin.Context) {
 	orderDetails, err := h.GetDetailOrder(orderID)
 
 	if err != nil {
-		response.InternalServerError("Get data failed", "error")
+		response.InternalServerError("Get data failed", "Error")
 		return
 	}
 
@@ -100,7 +100,7 @@ func (h *OrderHandler) FetchHistory(ctx *gin.Context) {
 	history, err := h.GetHistoryOrder(id)
 
 	if err != nil {
-		response.InternalServerError("Get data failed", err.Error())
+		response.InternalServerError("Get data failed", "Error")
 		return
 	}
 
@@ -109,12 +109,12 @@ func (h *OrderHandler) FetchHistory(ctx *gin.Context) {
 
 		orderDetails, err := h.GetDetailOrder(orderID)
 		if err != nil {
-			response.InternalServerError("Get data failed", err.Error())
+			response.InternalServerError("Get data failed", "Error")
 			return
 		}
 
 		(*history)[i].Orders = *orderDetails
 	}
-	
+
 	response.Success("Get data success", history)
 }
