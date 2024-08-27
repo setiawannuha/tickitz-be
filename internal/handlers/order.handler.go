@@ -56,7 +56,7 @@ func (h *OrderHandler) FetchAll(ctx *gin.Context) {
 			response.InternalServerError("Get data failed", "Error")
 			return
 		}
-		order.Orders = *orderDetails
+		order.Orders = orderDetails
 	}
 	response.Success("Get data success", orders)
 }
@@ -81,7 +81,7 @@ func (h *OrderHandler) FetchDetail(ctx *gin.Context) {
 		return
 	}
 
-	order.Orders = *orderDetails
+	order.Orders = orderDetails
 
 	response.Success("Get data success", order)
 }
@@ -98,13 +98,13 @@ func (h *OrderHandler) FetchHistory(ctx *gin.Context) {
 	id := userID.(string)
 
 	history, err := h.GetHistoryOrder(id)
-
 	if err != nil {
 		response.InternalServerError("Get data failed", "Error")
 		return
 	}
 
-	for i, order := range *history {
+	// Iterate through each order and get its details
+	for i, order := range history {
 		orderID := order.Id
 
 		orderDetails, err := h.GetDetailOrder(orderID)
@@ -113,8 +113,10 @@ func (h *OrderHandler) FetchHistory(ctx *gin.Context) {
 			return
 		}
 
-		(*history)[i].Orders = *orderDetails
+		// Populate the Orders field with the details
+		history[i].Orders = orderDetails
 	}
+
 
 	response.Success("Get data success", history)
 }
