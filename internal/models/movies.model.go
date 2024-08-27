@@ -18,6 +18,7 @@ CREATE TABLE public.movies (
 	created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at timestamp NULL,
 	is_deleted bool NULL DEFAULT false,
+	banner text NULL,
 	CONSTRAINT movies_pkey PRIMARY KEY (id),
 	CONSTRAINT unique_title UNIQUE (title)
 );

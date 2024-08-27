@@ -24,7 +24,7 @@ func movieRouter(g *gin.Engine, d *sqlx.DB) {
 	router.POST("/insert", handler.InsertMovies)
 	router.GET("/", handler.GetMovies)
 	router.GET("/:id", handler.GetMovieDetails)
-	// router.PATCH("/:id", handler.UpdateMovies)
+	router.PATCH("/:id", handler.UpdateMovies)
 	router.PATCH("/banner/:id", handler.BannerUpdate)
 	router.DELETE("/:id", handler.MoviesDelete)
 

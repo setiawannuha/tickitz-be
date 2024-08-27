@@ -4,11 +4,12 @@ import "time"
 
 var schemaPayments = `
 CREATE TABLE public.payment_methods (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR,
-    image TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	id serial4 NOT NULL,
+	"name" varchar NULL,
+	image text NULL,
+	created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+	CONSTRAINT payment_methods_pkey PRIMARY KEY (id)
 );
 `
 

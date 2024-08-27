@@ -4,11 +4,12 @@ import "time"
 
 var schemaAiringDate = `
 CREATE TABLE public.airing_date (
-    id SERIAL PRIMARY KEY,
-    start_date DATE,
-		end_date DATE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	id serial4 NOT NULL,
+	start_date date NULL,
+	created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+	end_date date NULL,
+	CONSTRAINT airing_date_pkey PRIMARY KEY (id)
 );
 `
 

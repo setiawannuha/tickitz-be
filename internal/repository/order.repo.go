@@ -7,10 +7,10 @@ import (
 )
 
 type OrderRepositoryInterface interface {
-	CreateData(body *models.Order)(string, error)
-	GetAllData()(*models.GetOrders, error)
-	GetDetailData(id string)(*models.GetOrder, error)
-	GetHistoryOrder(id string)(*models.GetOrder, error)
+	CreateData(body *models.Order) (string, error)
+	GetAllData() (*models.GetOrders, error)
+	GetDetailData(id string) (*models.GetOrder, error)
+	GetHistoryOrder(id string) (*models.GetOrder, error)
 }
 
 type OrderRepository struct {
@@ -21,16 +21,19 @@ func NewOrderRepository(db *sqlx.DB) *OrderRepository {
 	return &OrderRepository{db}
 }
 
-func (r *OrderRepository) CreateData(body *models.Order)(string, error){
+func (r *OrderRepository) CreateData(body *models.Order) (string, error) {
 	query := `INSERT INTO public.orders
-(order_number, user_id, payment_method_id, movie_time_id, seat_count, ticket_status)
-VALUES($1, $2, $3, $4, $5, $6) returning id;`
+(order_number, user_id, payment_method_id, movie_id, date, time, seat_count, total, ticket_status)
+VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) returning id;`
 	params := []interface{}{
 		body.Order_number,
 		body.User_id,
 		body.Payment_method_id,
-		body.Movie_time_id,
+		body.Movie_id,
+		body.Date,
+		body.Time,
 		body.Seat_count,
+		body.Total,
 		body.Ticket_status,
 	}
 
@@ -39,11 +42,11 @@ VALUES($1, $2, $3, $4, $5, $6) returning id;`
 	if err != nil {
 		return "", err
 	}
-    return id, nil
+	return id, nil
 }
 
-func (r *OrderRepository) GetAllData()(*models.GetOrders, error){
-	query := `select id, order_number, user_id, payment_method_id, movie_time_id, seat_count, ticket_status from order`
+func (r *OrderRepository) GetAllData() (*models.GetOrders, error) {
+	query := `select id, order_number, user_id, payment_method_id, movie_id, date, time, seat_count, ticket_status, total from orders`
 	data := models.GetOrders{}
 
 	err := r.Select(&data, query)
@@ -53,8 +56,33 @@ func (r *OrderRepository) GetAllData()(*models.GetOrders, error){
 	return &data, nil
 }
 
-func (r *OrderRepository) GetDetailData(id string)(*models.GetOrder, error){
-	query := `select id, order_number, user_id, payment_method_id, movie_time_id, seat_count, ticket_status from order where id=$1`
+func (r *OrderRepository) GetDetailData(id string) (*models.GetOrder, error) {
+	query := `SELECT 
+    o.id,
+    m.title AS movie_title,
+    o.seat_count,
+    o.ticket_status,
+    o.total,
+    o.date AS date,
+    o.time AS time,
+    ARRAY_AGG(DISTINCT g."name") AS genres
+	FROM 
+    public.orders o
+	JOIN 
+    public.movies m ON o.movie_id = m.id
+	LEFT JOIN 
+    public.genre_movies gm ON gm.movie_id = m.id
+	LEFT JOIN 
+    public.genres g ON gm.genre_id = g.id
+	LEFT JOIN 
+    public.order_details od ON od.order_id = o.id
+	WHERE 
+    o.id = $1
+	GROUP BY 
+    o.id, m.title, o.seat_count, o.ticket_status, o.total, o.date, o.time
+	ORDER BY 
+    o.date ASC;
+`
 	data := models.GetOrder{}
 
 	err := r.Get(&data, query, id)
@@ -64,8 +92,34 @@ func (r *OrderRepository) GetDetailData(id string)(*models.GetOrder, error){
 	return &data, nil
 }
 
-func (r *OrderRepository) GetHistoryOrder(id string)(*models.GetOrder, error){
-	query := `select o.id, o.order_number, o.user_id, o.payment_method_id, o.movie_time_id, o.seat_count, o.ticket_status from order o join public.users u on o.user_id = u.id where u.id=$1`
+func (r *OrderRepository) GetHistoryOrder(id string) (*models.GetOrder, error) {
+	query := `
+	SELECT 
+		o.id,
+    m.title AS movie_title,
+    o.seat_count,
+    o.ticket_status,
+    o.total,
+    o.date AS date,
+    o.time AS time,
+    ARRAY_AGG(DISTINCT g."name") AS genres
+	FROM 
+    public.orders o
+	JOIN 
+    public.movies m ON o.movie_id = m.id
+	LEFT JOIN 
+    public.genre_movies gm ON gm.movie_id = m.id
+	LEFT JOIN 
+    public.genres g ON gm.genre_id = g.id
+	LEFT JOIN 
+    public.order_details od ON od.order_id = o.id
+	WHERE 
+    o.user_id = $1
+	GROUP BY 
+    o.id, m.title, o.seat_count, o.ticket_status, o.total, o.date, o.time
+	ORDER BY 
+    o.date ASC;
+`
 	data := models.GetOrder{}
 
 	err := r.Get(&data, query, id)
@@ -74,5 +128,3 @@ func (r *OrderRepository) GetHistoryOrder(id string)(*models.GetOrder, error){
 	}
 	return &data, nil
 }
-
-

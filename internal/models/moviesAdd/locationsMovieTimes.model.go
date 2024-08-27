@@ -4,13 +4,14 @@ import "time"
 
 var schemaLocationsMovieTimes = `
 CREATE TABLE public.location_movie_time (
-    id SERIAL PRIMARY KEY,
-    location_id INT,
-    movie_time_id INT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (location_id) REFERENCES locations(id),
-    FOREIGN KEY (movie_time_id) REFERENCES movies_time(id)
+	id serial4 NOT NULL,
+	location_id int4 NULL,
+	movie_time_id int4 NULL,
+	created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+	CONSTRAINT location_movie_time_pkey PRIMARY KEY (id),
+	CONSTRAINT location_movie_time_location_id_fkey FOREIGN KEY (location_id) REFERENCES public.locations(id) ON DELETE CASCADE,
+	CONSTRAINT location_movie_time_movie_time_id_fkey FOREIGN KEY (movie_time_id) REFERENCES public.movies_time(id) ON DELETE CASCADE
 );
 `
 
