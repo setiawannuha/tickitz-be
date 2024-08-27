@@ -34,7 +34,7 @@ func (r *OrderDetailsRepository) CreateOrderDetails(order_id string, orders []mo
 			return "", err
 		}
 	}
-	return "Order created", nil
+	return order_id, nil
 }
 
 func (r *OrderDetailsRepository) GetDetailOrder(order_id string) ([]models.GetOrderDetails, error) {
