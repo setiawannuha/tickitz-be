@@ -34,7 +34,7 @@ type GetOrder struct {
 	Time              *string           `db:"time" json:"time" form:"time"`
 	Seat_count        *int              `db:"seat_count" json:"seat_count" form:"seat_count"`
 	Ticket_status     *string           `db:"ticket_status" json:"ticket_status" form:"ticket_status"`
-	Genres            []byte            `db:"genres" json:"genres"` // Changed to a slice of strings
+	Genres            *string           `db:"genres" json:"genres"` // Changed to a slice of strings
 	Total             *int              `db:"total" json:"total" form:"total"`
 	Orders            []GetOrderDetails `json:"orders"`
 	Created_at        *time.Time        `db:"created_at" json:"created_at,omitempty" form:"created_at"`
