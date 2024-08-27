@@ -2,6 +2,7 @@ package routers
 
 import (
 	"khalifgfrz/coffee-shop-be-go/internal/handlers"
+	middleware "khalifgfrz/coffee-shop-be-go/internal/middlewares"
 	"khalifgfrz/coffee-shop-be-go/internal/repository"
 	"khalifgfrz/coffee-shop-be-go/pkg"
 
@@ -18,14 +19,23 @@ func movieRouter(g *gin.Engine, d *sqlx.DB) {
 	var airingTimeDateRepo repository.AiringTimeDateRepoInterface = repository.NewAiringTimeDateRepository(d, nil)
 	var movieTimeRepo repository.MovieTimeRepoInteface = repository.NewMovieTimeRepository(d)
 	var locationMovieTimeRepo repository.LocationMovieTimeRepoInterface = repository.NewLocationMovieRepository(d)
+	var timesRepo repository.AiringTimeRepoInterface = repository.NewAiringTimeRepository(d)
+	var locations repository.LocationRepoInterface = repository.NewLocationRepository(d)
+	var gRepo repository.GenreRepoInterface = repository.NewGenresRepository(d)
 	var cld pkg.Cloudinary = *pkg.NewCloudinaryUtil()
-	handler := handlers.NewMovieRepository(movieRepo, genreRepo, airingDateRepo, airingTimeDateRepo, movieTimeRepo, locationMovieTimeRepo, cld, d)
+	handler := handlers.NewMovieRepository(movieRepo, genreRepo, airingDateRepo, airingTimeDateRepo, movieTimeRepo, locationMovieTimeRepo, timesRepo, locations, gRepo, cld, d)
 
-	router.POST("/insert", handler.InsertMovies)
+	router.POST("/insert", middleware.Auth("admin"), handler.InsertMovies)
 	router.GET("/", handler.GetMovies)
-	router.GET("/:id", handler.GetMovieDetails)
-	router.PATCH("/:id", handler.UpdateMovies)
-	router.PATCH("/banner/:id", handler.BannerUpdate)
-	router.DELETE("/:id", handler.MoviesDelete)
+	router.GET("/:id", middleware.Auth("user", "admin"), handler.GetMovieDetails)
+	router.PATCH("/:id", middleware.Auth("admin"), handler.UpdateMovies)
+	router.PATCH("/banner/:id", middleware.Auth("admin"), handler.BannerUpdate)
+	router.DELETE("/:id", middleware.Auth("admin"), handler.MoviesDelete)
+
+	//additional
+
+	router.GET("/times", handler.GetAllAiringTime)
+	router.GET("/locations", handler.GetLocations)
+	router.GET("/genres", handler.GetGenres)
 
 }

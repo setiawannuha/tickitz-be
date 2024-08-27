@@ -11,10 +11,11 @@ import (
 type OrderHandler struct {
 	repository.OrderRepositoryInterface
 	repository.OrderDetailsRepositoryInterface
+	repository.PaymentsRepoInterface
 }
 
-func NewOrderHandler(orderRepo repository.OrderRepositoryInterface, orderDetailsRepo repository.OrderDetailsRepositoryInterface) *OrderHandler {
-	return &OrderHandler{orderRepo, orderDetailsRepo}
+func NewOrderHandler(orderRepo repository.OrderRepositoryInterface, orderDetailsRepo repository.OrderDetailsRepositoryInterface, payments repository.PaymentsRepoInterface) *OrderHandler {
+	return &OrderHandler{orderRepo, orderDetailsRepo, payments}
 }
 
 func (h *OrderHandler) CreateOrder(ctx *gin.Context) {
@@ -117,6 +118,22 @@ func (h *OrderHandler) FetchHistory(ctx *gin.Context) {
 		history[i].Orders = orderDetails
 	}
 
-
 	response.Success("Get data success", history)
+}
+
+//additional
+
+func (h *OrderHandler) GetPayments(ctx *gin.Context) {
+	response := pkg.NewResponse(ctx)
+
+	data, err := h.GetAllPayments()
+	if err != nil {
+		response.InternalServerError("Internal Server Error", err.Error())
+	}
+	if len(data) == 0 {
+		response.NotFound("Data Not Found", "No datas available for the given criteria")
+		return
+	}
+
+	response.Success("Data retrieved successfully", data)
 }

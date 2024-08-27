@@ -23,10 +23,9 @@ func NewOrderRepository(db *sqlx.DB) *OrderRepository {
 
 func (r *OrderRepository) CreateData(body *models.Order) (string, error) {
 	query := `INSERT INTO public.orders
-(order_number, user_id, payment_method_id, movie_id, date, time, seat_count, total, ticket_status)
-VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) returning id;`
+(user_id, payment_method_id, movie_id, date, time, seat_count, total, ticket_status)
+VALUES($1, $2, $3, $4, $5, $6, $7, $8) returning id;`
 	params := []interface{}{
-		body.Order_number,
 		body.User_id,
 		body.Payment_method_id,
 		body.Movie_id,
