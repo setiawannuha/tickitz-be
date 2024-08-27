@@ -26,11 +26,12 @@ type GetOrder struct {
 	Order_number      *string           `db:"order_number" json:"order_number" form:"order_number"`
 	User_id           *string           `db:"user_id" json:"user_id" form:"user_id"`
 	Payment_method_id *int              `db:"payment_method_id" json:"payment_method_id" form:"payment_method_id"`
-	Movie_id          *string           `db:"movie_id" json:"movie_id" form:"movie_id"`
+	Movie_title       *string           `db:"movie_title" json:"movie_title" form:"movie_title"`
 	Date              *string           `db:"date" json:"date" form:"date"`
 	Time              *string           `db:"time" json:"time" form:"time"`
 	Seat_count        *int              `db:"seat_count" json:"seat_count" form:"seat_count"`
 	Ticket_status     *string           `db:"ticket_status" json:"ticket_status" form:"ticket_status"`
+	Genres            *string           `db:"genres" json:"genres"`
 	Total             *int              `db:"total" json:"total" form:"total"`
 	Orders            []GetOrderDetails `json:"orders"`
 	Created_at        *time.Time        `db:"created_at" json:"created_at" form:"created_at"`

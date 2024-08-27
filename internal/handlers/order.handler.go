@@ -88,7 +88,7 @@ func (h *OrderHandler) FetchDetail(ctx *gin.Context) {
 
 func (h *OrderHandler) FetchHistory(ctx *gin.Context) {
 	response := pkg.NewResponse(ctx)
-	userID, exists := ctx.Get("user_id")
+	userID, exists := ctx.Get("id")
 
 	if !exists {
 		response.InternalServerError("User id not found", nil)
@@ -100,7 +100,7 @@ func (h *OrderHandler) FetchHistory(ctx *gin.Context) {
 	history, err := h.GetHistoryOrder(id)
 
 	if err != nil {
-		response.InternalServerError("Get data failed", "error")
+		response.InternalServerError("Get data failed", err.Error())
 		return
 	}
 
@@ -109,7 +109,7 @@ func (h *OrderHandler) FetchHistory(ctx *gin.Context) {
 	orderDetails, err := h.GetDetailOrder(orderID)
 
 	if err != nil {
-		response.InternalServerError("Get data failed", "error")
+		response.InternalServerError("Get data failed", err.Error())
 		return
 	}
 

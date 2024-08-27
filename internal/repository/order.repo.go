@@ -63,8 +63,8 @@ func (r *OrderRepository) GetDetailData(id string) (*models.GetOrder, error) {
     o.seat_count,
     o.ticket_status,
     o.total,
-    o.date AS order_date,
-    o.time AS order_time,
+    o.date AS date,
+    o.time AS time,
     ARRAY_AGG(DISTINCT g."name") AS genres
 	FROM 
     public.orders o
@@ -79,7 +79,7 @@ func (r *OrderRepository) GetDetailData(id string) (*models.GetOrder, error) {
 	WHERE 
     o.id = $1
 	GROUP BY 
-    m.title, o.seat_count, o.ticket_status, o.total, o.date, o.time
+    o.id, m.title, o.seat_count, o.ticket_status, o.total, o.date, o.time
 	ORDER BY 
     o.date ASC;
 `
@@ -100,8 +100,8 @@ func (r *OrderRepository) GetHistoryOrder(id string) (*models.GetOrder, error) {
     o.seat_count,
     o.ticket_status,
     o.total,
-    o.date AS order_date,
-    o.time AS order_time,
+    o.date AS date,
+    o.time AS time,
     ARRAY_AGG(DISTINCT g."name") AS genres
 	FROM 
     public.orders o
@@ -116,7 +116,7 @@ func (r *OrderRepository) GetHistoryOrder(id string) (*models.GetOrder, error) {
 	WHERE 
     o.user_id = $1
 	GROUP BY 
-    m.title, o.seat_count, o.ticket_status, o.total, o.date, o.time
+    o.id, m.title, o.seat_count, o.ticket_status, o.total, o.date, o.time
 	ORDER BY 
     o.date ASC;
 `
