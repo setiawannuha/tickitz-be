@@ -4,10 +4,11 @@ import "time"
 
 var schemaLocations = `
 CREATE TABLE public.locations (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(50),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	id serial4 NOT NULL,
+	"name" varchar(50) NULL,
+	created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+	CONSTRAINT locations_pkey PRIMARY KEY (id)
 );
 `
 

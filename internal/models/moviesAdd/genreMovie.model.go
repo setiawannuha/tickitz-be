@@ -4,13 +4,14 @@ import "time"
 
 var schemaGenreMovies = `
 CREATE TABLE public.genre_movies (
-    id SERIAL PRIMARY KEY,
-    genre_id INT,
-    movie_id UUID,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (genre_id) REFERENCES genres(id),
-    FOREIGN KEY (movie_id) REFERENCES movies(id)
+	id serial4 NOT NULL,
+	genre_id int4 NULL,
+	movie_id uuid NULL,
+	created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+	CONSTRAINT genre_movies_pkey PRIMARY KEY (id),
+	CONSTRAINT genre_movies_genre_id_fkey FOREIGN KEY (genre_id) REFERENCES public.genres(id) ON DELETE CASCADE,
+	CONSTRAINT genre_movies_movie_id_fkey FOREIGN KEY (movie_id) REFERENCES public.movies(id) ON DELETE CASCADE
 );
 `
 

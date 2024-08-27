@@ -4,11 +4,12 @@ import "time"
 
 var schemaSeats = `
 CREATE TABLE public.seats (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(10),
-    status VARCHAR(10),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	id serial4 NOT NULL,
+	"name" varchar(10) NULL,
+	status varchar(10) NULL,
+	created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+	CONSTRAINT seats_pkey PRIMARY KEY (id)
 );
 `
 

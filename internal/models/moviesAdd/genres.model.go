@@ -4,10 +4,11 @@ import "time"
 
 var schemaGenres = `
 CREATE TABLE public.genres (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(20),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	id serial4 NOT NULL,
+	"name" varchar(20) NULL,
+	created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+	CONSTRAINT genres_pkey PRIMARY KEY (id)
 );
 `
 

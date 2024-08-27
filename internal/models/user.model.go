@@ -16,7 +16,8 @@ CREATE TABLE public.users (
 	is_deleted bool NULL,
 	CONSTRAINT unique_email UNIQUE (email),
 	CONSTRAINT users_pkey PRIMARY KEY (id)
-);`
+);
+`
 
 type User struct {
 	Id           string `db:"id" json:"id" form:"id" valid:"-"`
