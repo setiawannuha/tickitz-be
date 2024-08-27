@@ -10,7 +10,7 @@ import (
 )
 
 func orderRouter(g *gin.Engine, d *sqlx.DB) {
-	router := g.Group("/orders")
+	router := g.Group("/order")
 
 	var orderRepo repository.OrderRepositoryInterface = repository.NewOrderRepository(d)
 	var orderDetailsRepo repository.OrderDetailsRepositoryInterface = repository.NewOrderDetailsRepository(d)

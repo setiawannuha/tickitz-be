@@ -11,7 +11,7 @@ type UserRepositoryInterface interface {
 	UpdateData(data *models.User, id string) (string, error)
 	// GetAllData()(*models.Users , error)
 	GetDetailData(id string) (*models.UserDetails, error)
-	DeleteData(id string) (string, error)
+	// DeleteData(id string) (string, error)
 }
 
 type UserRepository struct {
@@ -84,12 +84,12 @@ func (r *UserRepository) GetDetailData(id string) (*models.UserDetails, error) {
 	return &data, nil
 }
 
-func (r *UserRepository) DeleteData(id string) (string, error) {
-	query := `UPDATE public.users SET is_deleted = true WHERE id = $1`
-	_, err := r.Exec(query, id)
-	if err != nil {
-		return "", err
-	}
+// func (r *UserRepository) DeleteData(id string) (string, error) {
+// 	query := `UPDATE public.users SET is_deleted = true WHERE id = $1`
+// 	_, err := r.Exec(query, id)
+// 	if err != nil {
+// 		return "", err
+// 	}
 
-	return "Delete success", nil
-}
+// 	return "Delete success", nil
+// }
