@@ -22,6 +22,9 @@ type HandlerMovie struct {
 	repository.AiringTimeDateRepoInterface
 	repository.MovieTimeRepoInteface
 	repository.LocationMovieTimeRepoInterface
+	repository.AiringTimeRepoInterface
+	repository.LocationRepoInterface
+	repository.GenreRepoInterface
 	pkg.Cloudinary
 	DB *sqlx.DB
 }
@@ -33,10 +36,13 @@ func NewMovieRepository(
 	atd repository.AiringTimeDateRepoInterface,
 	mt repository.MovieTimeRepoInteface,
 	lmt repository.LocationMovieTimeRepoInterface,
+	tm repository.AiringTimeRepoInterface,
+	l repository.LocationRepoInterface,
+	g repository.GenreRepoInterface,
 	cld pkg.Cloudinary,
 	db *sqlx.DB,
 ) *HandlerMovie {
-	return &HandlerMovie{mr, gmr, ad, atd, mt, lmt, cld, db}
+	return &HandlerMovie{mr, gmr, ad, atd, mt, lmt, tm, l, g, cld, db}
 }
 
 func SplitCommaSeparatedInts(input string) ([]int, error) {
@@ -502,4 +508,51 @@ func (h *HandlerMovie) UpdateMovies(ctx *gin.Context) {
 	}
 
 	response.Success("Movie updated successfully", updatedMovie)
+}
+
+//additional
+
+func (h *HandlerMovie) GetAllAiringTime(ctx *gin.Context) {
+	response := pkg.NewResponse(ctx)
+
+	data, err := h.GetAiringTime()
+	if err != nil {
+		response.InternalServerError("Internal Server Error", err.Error())
+	}
+	if len(data) == 0 {
+		response.NotFound("Data Not Found", "No datas available for the given criteria")
+		return
+	}
+
+	response.Success("Data retrieved successfully", data)
+}
+
+func (h *HandlerMovie) GetLocations(ctx *gin.Context) {
+	response := pkg.NewResponse(ctx)
+
+	data, err := h.GetAllLocations()
+	if err != nil {
+		response.InternalServerError("Internal Server Error", err.Error())
+	}
+	if len(data) == 0 {
+		response.NotFound("Data Not Found", "No datas available for the given criteria")
+		return
+	}
+
+	response.Success("Data retrieved successfully", data)
+}
+
+func (h *HandlerMovie) GetGenres(ctx *gin.Context) {
+	response := pkg.NewResponse(ctx)
+
+	data, err := h.GetAllGenres()
+	if err != nil {
+		response.InternalServerError("Internal Server Error", err.Error())
+	}
+	if len(data) == 0 {
+		response.NotFound("Data Not Found", "No datas available for the given criteria")
+		return
+	}
+
+	response.Success("Data retrieved successfully", data)
 }

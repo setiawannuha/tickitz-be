@@ -14,10 +14,14 @@ func orderRouter(g *gin.Engine, d *sqlx.DB) {
 
 	var orderRepo repository.OrderRepositoryInterface = repository.NewOrderRepository(d)
 	var orderDetailsRepo repository.OrderDetailsRepositoryInterface = repository.NewOrderDetailsRepository(d)
-	handler := handlers.NewOrderHandler(orderRepo, orderDetailsRepo)
+	var paymentRepo repository.PaymentsRepoInterface = repository.NewPaymentsRepository(d)
+	handler := handlers.NewOrderHandler(orderRepo, orderDetailsRepo, paymentRepo)
 
 	router.POST("/", middleware.Auth("user"), handler.CreateOrder)
 	router.GET("/history", middleware.Auth("user"), handler.FetchHistory)
 	router.GET("/", middleware.Auth("admin"), handler.FetchAll)
 	router.GET("/:id", middleware.Auth("user"), handler.FetchDetail)
+
+	//additional
+	router.GET("/payments", handler.GetPayments)
 }
