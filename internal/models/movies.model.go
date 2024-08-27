@@ -88,7 +88,7 @@ type MoviesQuery struct {
 	Page   int     `form:"page"`
 	Limit  int     `form:"limit"`
 	Search *string `form:"name"`
-	Filter *string `form:"category"`
+	Filter *string `form:"genres"`
 }
 
 type MoviesBanner struct {
