@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"khalifgfrz/coffee-shop-be-go/internal/models"
+	"khalifgfrz/coffee-shop-be-go/internal/models/moviesAdd"
 	"khalifgfrz/coffee-shop-be-go/internal/repository"
 	"khalifgfrz/coffee-shop-be-go/pkg"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,10 +14,18 @@ type OrderHandler struct {
 	repository.OrderRepositoryInterface
 	repository.OrderDetailsRepositoryInterface
 	repository.PaymentsRepoInterface
+	repository.SalesRepoInterface
+	repository.MovieRepoInterface
 }
 
-func NewOrderHandler(orderRepo repository.OrderRepositoryInterface, orderDetailsRepo repository.OrderDetailsRepositoryInterface, payments repository.PaymentsRepoInterface) *OrderHandler {
-	return &OrderHandler{orderRepo, orderDetailsRepo, payments}
+func NewOrderHandler(
+	orderRepo repository.OrderRepositoryInterface,
+	orderDetailsRepo repository.OrderDetailsRepositoryInterface,
+	payments repository.PaymentsRepoInterface,
+	sales repository.SalesRepoInterface,
+	movies repository.MovieRepoInterface,
+) *OrderHandler {
+	return &OrderHandler{orderRepo, orderDetailsRepo, payments, sales, movies}
 }
 
 func (h *OrderHandler) CreateOrder(ctx *gin.Context) {
@@ -136,4 +146,68 @@ func (h *OrderHandler) GetPayments(ctx *gin.Context) {
 	}
 
 	response.Success("Data retrieved successfully", data)
+}
+
+func (h *OrderHandler) FetchSales(ctx *gin.Context) {
+	response := pkg.NewResponse(ctx)
+
+	// Parse page and limit query parameters
+	pageStr := ctx.DefaultQuery("page", "1")
+	limitStr := ctx.DefaultQuery("limit", "10")
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		response.BadRequest("Invalid or missing 'page' parameter", err.Error())
+		return
+	}
+
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit < 1 {
+		response.BadRequest("Invalid or missing 'limit' parameter", err.Error())
+		return
+	}
+
+	// Prepare the query for fetching movies
+	query := models.MoviesQuery{
+		Page:  page,
+		Limit: limit,
+	}
+
+	// Fetch movies
+	movies, _, err := h.GetAllMovies(&query)
+	if err != nil {
+		response.InternalServerError("Get movie data failed", err.Error())
+		return
+	}
+
+	// Fetch sales data
+	salesData, err := h.GetAllSales()
+	if err != nil {
+		response.InternalServerError("Get sales data failed", err.Error())
+		return
+	}
+
+	// Combine movies with sales data
+	type MovieSales struct {
+		ID         string               `json:"id"`
+		Title      string               `json:"title"`
+		DailySales []moviesAdd.GetSales `json:"daily_sales"`
+	}
+
+	var dashboard struct {
+		Movies []MovieSales `json:"movies"`
+	}
+
+	for _, movie := range *movies {
+		movieSales := MovieSales{
+			ID:         movie.Id,
+			Title:      movie.Title,
+			DailySales: salesData,
+		}
+
+		dashboard.Movies = append(dashboard.Movies, movieSales)
+	}
+
+	// Send the response
+	response.GetAllSuccess("Sales data fetched successfully", dashboard, nil)
 }
