@@ -35,6 +35,21 @@ func (h *HandlerLocation) PostLocation(ctx *gin.Context) {
 	response.Created("Location has been created", results)
 }
 
+func (h *HandlerLocation) GetLocations(ctx *gin.Context) {
+	response := pkg.NewResponse(ctx)
+
+	data, err := h.GetAllLocations()
+	if err != nil {
+		response.InternalServerError("Internal Server Error", err.Error())
+	}
+	if len(data) == 0 {
+		response.NotFound("Data Not Found", "No datas available for the given criteria")
+		return
+	}
+
+	response.Success("Data retrieved successfully", data)
+}
+
 func (h *HandlerLocation) PatchLocations(ctx *gin.Context) {
 	response := pkg.NewResponse(ctx)
 	var location models.Locations

@@ -132,8 +132,6 @@ func (r *RepoMovies) GetAllMovies(query *models.MoviesQuery) (*models.MovieRespo
 		values = append(values, limit, offset)
 	}
 
-	fmt.Println(baseQuery)
-
 	var data models.MovieResponse
 	if err := r.Select(&data, baseQuery, values...); err != nil {
 		return nil, 0, err

@@ -9,8 +9,9 @@ import (
 
 type LocationRepoInterface interface {
 	CreateLocation(data *models.Locations) (string, error)
+	GetAllLocations() ([]models.Locations, error)
 	UpdateLocation(id int, data *models.Locations) (*models.Locations, error)
-	DeleteLocation(id int) (*models.Locations, error)
+	DeleteLocation(id int) (string, error)
 }
 
 type LocationRepo struct {
@@ -38,6 +39,18 @@ func (r *LocationRepo) CreateLocation(data *models.Locations) (string, error) {
 	}
 
 	return "Data created", nil
+}
+
+func (r *LocationRepo) GetAllLocations() ([]models.Locations, error) {
+	query := `SELECT id, name FROM locations`
+
+	var data []models.Locations
+	err := r.Select(&data, query)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }
 
 func (r *LocationRepo) UpdateLocation(id int, data *models.Locations) (*models.Locations, error) {
