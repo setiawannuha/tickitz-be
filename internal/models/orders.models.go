@@ -53,7 +53,7 @@ type Order struct {
 	Seat_count        int            `db:"seat_count" json:"seat_count" form:"seat_count"`
 	Ticket_status     string         `db:"ticket_status" json:"ticket_status" form:"ticket_status"`
 	Total             int            `db:"total" json:"total" form:"total"`
-	Orders            []OrderDetails `json:"orders"` // Assumes OrderDetails is already defined
+	Orders            []OrderDetails `json:"orders"`
 	Created_at        *time.Time     `db:"created_at" json:"created_at" form:"created_at"`
 	Updated_at        *time.Time     `db:"updated_at" json:"updated_at" form:"updated_at"`
 }

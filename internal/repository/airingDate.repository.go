@@ -2,7 +2,6 @@ package repository
 
 import (
 	"database/sql"
-	"fmt"
 	models "khalifgfrz/coffee-shop-be-go/internal/models/moviesAdd"
 
 	"github.com/jmoiron/sqlx"
@@ -25,25 +24,28 @@ func NewAiringDateRepository(db *sqlx.DB) *RepoAiringDate {
 
 // insert dynamically
 func (r *RepoAiringDate) CreateAiringDate(tx *sqlx.Tx, dates *models.AiringDate) ([]models.AiringDate, error) {
-	// insert start_date and end_date into database
 	query := `INSERT INTO airing_date (start_date, end_date) 
 	VALUES (:start_date, :end_date)
 	RETURNING id, start_date, end_date, created_at, updated_at`
 
-	fmt.Println(dates)
-
 	var results []models.AiringDate
-	rows, err := tx.NamedQuery(query, dates)
+	rows, err := tx.NamedQuery(query, *dates)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	if rows.Next() {
-		err := rows.StructScan(&results)
+	for rows.Next() {
+		var result models.AiringDate
+		err := rows.StructScan(&result)
 		if err != nil {
 			return nil, err
 		}
+		results = append(results, result)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return results, nil
