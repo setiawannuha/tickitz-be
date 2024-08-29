@@ -102,7 +102,7 @@ func (r *OrderRepository) GetHistoryOrder(id string) ([]models.GetOrder, error) 
     o.total,
     o.date AS date,
     o.time AS time,
-    ARRAY_AGG(DISTINCT g."name")::TEXT[] AS genres
+    COALESCE(STRING_AGG(DISTINCT g.name, ', '), '') AS genres
 	FROM 
     public.orders o
 	JOIN 
