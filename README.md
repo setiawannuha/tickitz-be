@@ -1,6 +1,6 @@
 # Tickitz
 
-Tickitz is a simple website for managing a online online cinema ticket booking. This application makes it easier for users if they want to create a online cinema ticket booking business.
+Tickitz is a simple website for managing a online cinema ticket booking. This application makes it easier for users if they want to create a online cinema ticket booking business.
 
 ## Table of Contents
 
