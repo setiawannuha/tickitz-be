@@ -22,6 +22,6 @@ func authRouter(g *gin.Engine, d *sqlx.DB) {
 	router.POST("/login", handler.Login)
 	router.PATCH("/settings", middleware.Auth("user"), handler.Update)
 	// router.GET("/", handler.FetchAll)
-	router.GET("/profile", middleware.Auth("user"), handler.FetchDetail)
+	router.GET("/profile", middleware.Auth("admin", "user"), handler.FetchDetail)
 	// router.DELETE("/delete", middleware.Auth("admin", "user"), handler.Delete)
 }

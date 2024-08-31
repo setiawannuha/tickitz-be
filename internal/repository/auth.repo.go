@@ -20,7 +20,7 @@ func NewAuthRepository(db *sqlx.DB) *AuthRepository {
 
 func (r *AuthRepository) GetByEmail(email string) (*models.Auth, error) {
 	result := models.Auth{}
-	query := `SELECT id, email, password, role from public.users WHERE email = $1`
+	query := `SELECT id, email, password, role, image from public.users WHERE email = $1`
 	err := r.Get(&result, query, email)
 	if err != nil {
 		return nil, err

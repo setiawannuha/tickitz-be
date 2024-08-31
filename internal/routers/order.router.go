@@ -22,7 +22,7 @@ func orderRouter(g *gin.Engine, d *sqlx.DB) {
 	router.POST("/", middleware.Auth("user"), handler.CreateOrder)
 	router.GET("/history", middleware.Auth("user"), handler.FetchHistory)
 	router.GET("/", middleware.Auth("admin"), handler.FetchAll)
-	router.GET("/:id", middleware.Auth("user"), handler.FetchDetail)
+	router.GET("/:id", handler.FetchDetail)
 
 	//additional
 	router.GET("/payments", handler.GetPayments)
