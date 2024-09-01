@@ -83,13 +83,11 @@ func (h *HandlerMovie) InsertMovies(ctx *gin.Context) {
 			tx.Rollback()
 		}
 	}()
-
 	if err := ctx.ShouldBind(&movies); err != nil {
 		tx.Rollback()
 		response.BadRequest("Create movie failed, invalid input", err.Error())
 		return
 	}
-
 	genres, err := SplitCommaSeparatedInts(*movies.Genres)
 	if err != nil {
 		tx.Rollback()
@@ -175,7 +173,7 @@ func (h *HandlerMovie) InsertMovies(ctx *gin.Context) {
 		}
 	}
 
-	for _, dateRange := range *movies.AiringDate {
+	for _, dateRange := range strings.Split(*movies.AiringDate, ",") {
 		dates := strings.Split(dateRange, ",")
 		var airingDate moviesAdd.AiringDate
 
