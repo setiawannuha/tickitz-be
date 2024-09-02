@@ -106,15 +106,18 @@ func (r *RepoMovies) GetAllMovies(query *models.MoviesQuery) (*models.MovieRespo
 		values = append(values, searchTerm)
 	}
 
-	// Filter by genre, considering that a movie may have multiple genres
 	if query.Filter != nil {
-		filterTerm := *query.Filter
-		whereClauses = append(whereClauses, fmt.Sprintf(`EXISTS (
-			SELECT 1 FROM public.genre_movies gm2
-			JOIN public.genres g2 ON gm2.genre_id = g2.id
-			WHERE gm2.movie_id = "m".id AND g2.name = $%d
-		)`, len(values)+1))
-		values = append(values, filterTerm)
+		genres := strings.Split(*query.Filter, ",")
+		for _, genre := range genres {
+			genre = strings.TrimSpace(genre)
+			whereClauses = append(whereClauses, fmt.Sprintf(`EXISTS (
+				SELECT 1 
+				FROM public.genre_movies gm2
+				JOIN public.genres g2 ON gm2.genre_id = g2.id
+				WHERE gm2.movie_id = m.id AND g2.name ILIKE $%d
+			)`, len(values)+1))
+			values = append(values, genre)
+		}
 	}
 
 	if len(whereClauses) > 0 {
