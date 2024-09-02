@@ -1,9 +1,9 @@
 package main
 
 import (
-	"khalifgfrz/coffee-shop-be-go/internal/routers"
-	"khalifgfrz/coffee-shop-be-go/pkg"
 	"log"
+	"setiawannuha/tickitz-be/internal/routers"
+	"setiawannuha/tickitz-be/pkg"
 
 	_ "github.com/joho/godotenv/autoload"
 )

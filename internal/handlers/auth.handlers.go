@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"fmt"
-	"khalifgfrz/coffee-shop-be-go/internal/models"
-	"khalifgfrz/coffee-shop-be-go/internal/repository"
-	"khalifgfrz/coffee-shop-be-go/pkg"
 	"math/rand"
+	"setiawannuha/tickitz-be/internal/models"
+	"setiawannuha/tickitz-be/internal/repository"
+	"setiawannuha/tickitz-be/pkg"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/gin-gonic/gin"
@@ -86,13 +86,13 @@ func (h *AuthHandler) Login(ctx *gin.Context) {
 	}
 
 	response.Success("Login success", gin.H{
-        "token": token,
-        "user": gin.H{
-            "email":      result.Email,
-            "role":       result.Role,
-            "image":       result.Image,
-        },
-    })
+		"token": token,
+		"user": gin.H{
+			"email": result.Email,
+			"role":  result.Role,
+			"image": result.Image,
+		},
+	})
 }
 
 func (h *AuthHandler) Update(ctx *gin.Context) {

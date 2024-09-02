@@ -1,4 +1,4 @@
-module khalifgfrz/coffee-shop-be-go
+module setiawannuha/tickitz-be
 
 go 1.21.0
 

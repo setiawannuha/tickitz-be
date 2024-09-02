@@ -2,7 +2,7 @@
 package repository
 
 import (
-	models "khalifgfrz/coffee-shop-be-go/internal/models/moviesAdd"
+	models "setiawannuha/tickitz-be/internal/models/moviesAdd"
 
 	"github.com/jmoiron/sqlx"
 )

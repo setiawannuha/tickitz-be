@@ -1,7 +1,7 @@
 package routers
 
 import (
-	middleware "khalifgfrz/coffee-shop-be-go/internal/middlewares"
+	middleware "setiawannuha/tickitz-be/internal/middlewares"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
@@ -12,17 +12,16 @@ func New(db *sqlx.DB) *gin.Engine {
 
 	// config := cors.DefaultConfig()
 
-
 	// router.Use(cors.New(config))
 
 	// router.Use(cors.New(cors.Config{
-    //     AllowAllOrigins:  true,
-    //     AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-    //     AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization", "application/json"},
-    //     ExposeHeaders:    []string{"Content-Length"},
-    //     AllowCredentials: true,
-    //     MaxAge:           12 * time.Hour,
-    // }))
+	//     AllowAllOrigins:  true,
+	//     AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+	//     AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization", "application/json"},
+	//     ExposeHeaders:    []string{"Content-Length"},
+	//     AllowCredentials: true,
+	//     MaxAge:           12 * time.Hour,
+	// }))
 
 	router.Use(middleware.CORSMiddleware())
 

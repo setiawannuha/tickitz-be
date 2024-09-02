@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	models "khalifgfrz/coffee-shop-be-go/internal/models/moviesAdd"
-	"khalifgfrz/coffee-shop-be-go/internal/repository"
-	"khalifgfrz/coffee-shop-be-go/pkg"
+	models "setiawannuha/tickitz-be/internal/models/moviesAdd"
+	"setiawannuha/tickitz-be/internal/repository"
+	"setiawannuha/tickitz-be/pkg"
 
 	"github.com/gin-gonic/gin"
 )

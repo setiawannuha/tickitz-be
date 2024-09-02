@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"khalifgfrz/coffee-shop-be-go/pkg"
+	"setiawannuha/tickitz-be/pkg"
 	"strings"
 
 	"github.com/gin-gonic/gin"
